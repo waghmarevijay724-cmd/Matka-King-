@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Fund</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h3>Add Fund</h3>
+
+<input type="number" id="amount" placeholder="Enter Amount">
+<button onclick="addFund()">Add Fund</button>
+
+<p id="msg"></p>
+
+<script>
+// 🔐 Login check
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile){
+  location.href="index.html";
+}
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile));
+
+// safety for old users
+if(!user.passbook) user.passbook=[];
+
+function addFund(){
+
+  let amt = Number(document.getElementById("amount").value);
+
+  if(amt<=0){
+    alert("Enter valid amount");
+    return;
+  }
+
+  // 💰 Wallet add
+  user.wallet += amt;
+
+  // 📘 Passbook entry
+  user.passbook.push({
+    type:"CREDIT",
+    amount:amt,
+    note:"Add Fund",
+    time:new Date().toLocaleString()
+  });
+
+  // 💾 Save
+  localStorage.setItem("user_"+mobile, JSON.stringify(user));
+
+  document.getElementById("msg").innerText =
+    "₹"+amt+" added successfully";
+}
+</script>
+
+</body>
+</html>
+
+</body>
+</html>

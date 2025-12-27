@@ -131,7 +131,7 @@ body{
 <script>
 // 🔐 LOGIN CHECK
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.html";
+if(!mobile) location.href="login.index.html";
 
 let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {};
 let allData = (user.passbook || []).slice().reverse();

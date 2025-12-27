@@ -88,7 +88,7 @@ button:disabled{opacity:.5}
 <script>
 // 🔐 LOGIN
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.html";
+if(!mobile) location.href="login.index.html";
 
 let userKey = "user_"+mobile;
 let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User",wallet:0};
@@ -100,11 +100,11 @@ wallet.innerText = user.wallet || 0;
 function go(p){location.href=p}
 function logout(){
  localStorage.removeItem("loggedUser");
- location.href="login.html";
+ location.href="login.index.html";
 }
 function openMarket(m){
  localStorage.setItem("selectedMarket",m);
- location.href="sridevi night ank dashboard.html";
+ location.href="sridevi night ank dashboard.index.html";
 }
 
 // ⏱ MARKET DATA

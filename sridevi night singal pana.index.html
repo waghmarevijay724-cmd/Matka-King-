@@ -17,7 +17,7 @@ th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
 .bottom{
  position:fixed;bottom:0;left:0;right:0;background:#fff;
  padding:10px;display:flex;justify-content:space-between;
- border-top:1px solid #ddd;gap:10px
+ border-top:1px solid #ddd;gap:10px;align-items:center
 }
 #panaList{
  position:absolute;background:#fff;width:100%;
@@ -53,7 +53,7 @@ th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
 <label>Points</label>
 <input id="points" type="number" placeholder="Enter points">
 
-<button onclick="addBid()">Add More</button>
+<button type="button" onclick="addBid()">Add More</button>
 
 <table>
 <thead>
@@ -72,27 +72,35 @@ th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
 <div class="bottom">
  <div>Bids: <b id="bcount">0</b></div>
  <div>Points: <b id="tpoints">0</b></div>
- <button onclick="submitBids()">Submit</button>
+ <button type="button" onclick="submitBids()">Submit</button>
 </div>
 
 <script>
 // 🔐 LOGIN CHECK
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.index.html";
+if(!mobile){
+ alert("Please login");
+ location.href="login.index.html";
+}
 
-// 👤 USER
-let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {wallet:0,myBids:[],passbook:[]};
-wallet.innerText = user.wallet;
+// 👤 USER DATA
+let user = JSON.parse(localStorage.getItem("user_"+mobile));
+if(!user){
+ user={wallet:0,myBids:[],passbook:[]};
+ localStorage.setItem("user_"+mobile,JSON.stringify(user));
+}
+
+wallet.innerText=user.wallet;
 
 // 📌 MARKET
 let market = localStorage.getItem("selectedMarket") || "MARKET";
-marketName.innerText = market;
+marketName.innerText=market;
 
-// 📦 TEMP DATA
+// 📦 TEMP
 let bids=[];
 let total=0;
 
-// 🔢 SINGLE DIGIT
+// 🔢 SINGLE DIGIT LOGIC
 function singleDigit(p){
  return (p.split('').reduce((a,b)=>a+Number(b),0))%10;
 }
@@ -104,7 +112,7 @@ function addBid(){
  let session=betType.value;
 
  if(pana.length!==3) return alert("Select valid pana");
- if(pts<=0) return alert("Enter points");
+ if(pts<=0) return alert("Enter valid points");
  if(user.wallet < total+pts) return alert("Low balance");
 
  bids.push({
@@ -119,9 +127,10 @@ function addBid(){
 
  panaInput.value="";
  points.value="";
+ panaList.style.display="none";
 }
 
-// 🔄 RENDER
+// 🔄 RENDER TABLE
 function render(){
  list.innerHTML=bids.map(b=>`
  <tr>
@@ -136,11 +145,11 @@ function render(){
  tpoints.innerText=total;
 }
 
-// ✅ SUBMIT
+// ✅ SUBMIT BIDS
 function submitBids(){
- if(!bids.length) return alert("No bids");
+ if(bids.length===0) return alert("No bids added");
 
- user.wallet-=total;
+ user.wallet -= total;
 
  bids.forEach(b=>{
   user.myBids.push({
@@ -149,7 +158,7 @@ function submitBids(){
    session:b.session,
    panaType:"Single Pana",
    panaNo:b.panaNo,
-   number:b.number,        // 🔥 VERY IMPORTANT
+   number:b.number,
    amount:b.amount,
    status:"PENDING",
    winAmount:0,
@@ -161,20 +170,20 @@ function submitBids(){
   type:"DEBIT",
   market:market,
   session:bids[0].session,
-  panaType:"Single Pana",
-  panaNo:bids.map(b=>b.panaNo).join(", "),
+  game:"Single Pana",
   amount:total,
   time:new Date().toLocaleString()
  });
 
  localStorage.setItem("user_"+mobile,JSON.stringify(user));
- alert("Single Pana Bid Submitted");
+
+ alert("Single Pana Bid Submitted Successfully");
  location.reload();
 }
 </script>
 
 <script>
-// 🔍 PANA SEARCH
+// 🔍 SINGLE PANA LIST
 const singlePanaList=[
 "120","123","124","125","126","127","128","129","130",
 "134","135","136","137","138","139","140",

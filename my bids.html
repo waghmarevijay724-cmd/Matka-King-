@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Bids</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f2f2}
+
+.header{
+ display:flex;align-items:center;
+ padding:12px;background:#fff;
+ box-shadow:0 2px 5px rgba(0,0,0,.1)
+}
+.back{font-size:18px;margin-right:10px;cursor:pointer}
+.title{font-weight:bold;font-size:16px}
+.wallet{
+ margin-left:auto;background:#111;color:#fff;
+ padding:5px 12px;border-radius:20px;font-size:13px
+}
+
+.card{
+ background:#fff;margin:10px;
+ border-radius:12px;
+ padding:10px;
+ box-shadow:0 2px 5px rgba(0,0,0,.1)
+}
+
+.market{font-weight:bold;color:#ff9800}
+.row{
+ display:flex;
+ justify-content:space-between;
+ font-size:13px;
+ margin-top:6px
+}
+
+.badge{
+ padding:3px 10px;
+ border-radius:12px;
+ font-size:11px;
+ color:#fff
+}
+.win{background:green}
+.loss{background:red}
+.pending{background:#ff9800}
+
+.session{
+ padding:2px 8px;
+ font-size:10px;
+ border-radius:10px;
+ color:#fff
+}
+.open{background:#2196f3}
+.close{background:#9c27b0}
+
+.empty{
+ text-align:center;color:#777;margin-top:50px
+}
+.winamt{color:green;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+ <div class="back" onclick="history.back()">←</div>
+ <div class="title">My Bids</div>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div id="bidList"></div>
+
+<script>
+// 🔐 LOGIN
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
+ wallet:0,
+ bids:[]
+};
+wallet.innerText = user.wallet || 0;
+
+let bids = user.bids || [];
+let box = document.getElementById("bidList");
+
+// 🎯 UPDATE WIN / LOSS + WIN AMOUNT
+function updateBidStatus(){
+ let results = JSON.parse(localStorage.getItem("marketResults")) || {};
+
+ bids.forEach(b=>{
+  let r = results[b.market];
+  if(!r){
+   b.status="PENDING";
+   b.winAmount=0;
+   return;
+  }
+
+  let resultDigit =
+   b.session==="OPEN" ? r.openSingle :
+   b.session==="CLOSE" ? r.closeSingle : null;
+
+  if(resultDigit===undefined || resultDigit===null){
+   b.status="PENDING";
+   b.winAmount=0;
+  }
+  else if(Number(b.number) === Number(resultDigit)){
+   b.status="WIN";
+   b.winAmount = b.amount * 9;   // 💰 PAYOUT
+  }
+  else{
+   b.status="LOSS";
+   b.winAmount=0;
+  }
+ });
+
+ localStorage.setItem("user_"+mobile,JSON.stringify(user));
+}
+
+// 🧾 RENDER BIDS
+function renderBids(){
+ box.innerHTML="";
+ if(bids.length===0){
+  box.innerHTML="<div class='empty'>No bids found</div>";
+  return;
+ }
+
+ bids.slice().reverse().forEach(b=>{
+  let statusClass =
+   b.status==="WIN" ? "win" :
+   b.status==="LOSS" ? "loss" : "pending";
+
+  box.innerHTML+=`
+  <div class="card">
+   <div class="market">${b.market}</div>
+
+   <div class="row">
+    <div>${b.game || 'Single Digit'}</div>
+    <div class="session ${b.session==='OPEN'?'open':'close'}">${b.session}</div>
+   </div>
+
+   <div class="row">
+    <div>Digit</div>
+    <div><b>${b.number}</b></div>
+   </div>
+
+   <div class="row">
+    <div>Bet Amount</div>
+    <div>₹${b.amount}</div>
+   </div>
+
+   <div class="row">
+    <div>Status</div>
+    <div class="badge ${statusClass}">${b.status}</div>
+   </div>
+
+   <div class="row">
+    <div>Win Amount</div>
+    <div class="winamt">₹${b.winAmount || 0}</div>
+   </div>
+  </div>`;
+ });
+}
+
+// 🔄 AUTO REFRESH (Admin result ke baad)
+function refresh(){
+ updateBidStatus();
+ renderBids();
+ wallet.innerText = user.wallet;
+}
+
+refresh();
+setInterval(refresh,5000); // every 5 sec
+</script>
+
+</body>
+</html>

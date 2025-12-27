@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Mama567 Dashboard</title>
+<title>vijaymatka Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -88,7 +88,7 @@ button:disabled{opacity:.5}
 <script>
 // 🔐 LOGIN
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.index.html";
+if(!mobile) location.href="index.html";
 
 let userKey = "user_"+mobile;
 let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User",wallet:0};
@@ -100,7 +100,7 @@ wallet.innerText = user.wallet || 0;
 function go(p){location.href=p}
 function logout(){
  localStorage.removeItem("loggedUser");
- location.href="login.index.html";
+ location.href="index.html";
 }
 function openMarket(m){
  localStorage.setItem("selectedMarket",m);

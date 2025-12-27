@@ -49,7 +49,7 @@ button:disabled{opacity:.5}
 <script>
 // ================= LOGIN =================
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.html";
+if(!mobile) location.href="login.index.html";
 
 let userKey = "user_"+mobile;
 let user = JSON.parse(localStorage.getItem(userKey)) || {

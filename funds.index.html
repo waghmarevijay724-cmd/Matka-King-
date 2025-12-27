@@ -88,7 +88,7 @@ body{
  <span>Deposit History</span>
 </div>
 
-<div class="card" onclick="location.href='withdrawal-history.html'">
+<div class="card" onclick="location.href='withdrawal-history.index.html'">
  <div class="icon">💸</div>
  <span>Withdrawal History</span>
 </div>
@@ -113,80 +113,100 @@ body{
 </div>
 
 <script>
+const walletEl = document.getElementById("wallet");
+
+// user identify
 let mobile = localStorage.getItem("loggedUser");
 if(!mobile){
  mobile = "9999999999";
  localStorage.setItem("loggedUser", mobile);
 }
 
-let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
- wallet: 0,
- passbook: []
-};
+// load user
+let user = JSON.parse(localStorage.getItem("user_"+mobile));
+if(!user){
+ user = {
+   wallet: 0,
+   passbook: [],
+   depositHistory: [],
+   withdrawHistory: []
+ };
+}
 
-wallet.innerText = user.wallet;
+// show wallet
+walletEl.innerText = user.wallet;
 
-// ➕ Add Fund
+// ➕ ADD FUND
 function addFund(){
  let amt = prompt("Enter amount");
- if(!amt || amt<=0) return;
-
  amt = Number(amt);
+
+ if(isNaN(amt) || amt <= 0){
+   alert("Invalid amount");
+   return;
+ }
+
  user.wallet += amt;
 
- user.depositHistory = user.depositHistory || [];
  user.depositHistory.push({
-   amount:amt,
-   time:new Date().toLocaleString(),
-   status:"SUCCESS"
+   amount: amt,
+   time: new Date().toLocaleString(),
+   status: "SUCCESS"
  });
 
  user.passbook.push({
-   type:"CREDIT",
-   amount:amt,
-   note:"Add Fund",
-   time:new Date().toLocaleString()
+   type: "CREDIT",
+   amount: amt,
+   note: "Add Fund",
+   time: new Date().toLocaleString()
  });
 
- save();
- alert("Fund Added");
+ saveData();
+ alert("Fund Added Successfully");
 }
 
-// ⬇️ Withdraw
+// ⬇️ WITHDRAW
 function withdrawFund(){
  let amt = prompt("Enter withdraw amount");
- if(!amt || amt<=0) return;
  amt = Number(amt);
 
- if(user.wallet < amt) return alert("Low balance");
+ if(isNaN(amt) || amt <= 0){
+   alert("Invalid amount");
+   return;
+ }
+
+ if(user.wallet < amt){
+   alert("Low balance");
+   return;
+ }
 
  user.wallet -= amt;
 
- user.withdrawHistory = user.withdrawHistory || [];
  user.withdrawHistory.push({
-   amount:amt,
-   time:new Date().toLocaleString(),
-   status:"PENDING"
+   amount: amt,
+   time: new Date().toLocaleString(),
+   status: "PENDING"
  });
 
  user.passbook.push({
-   type:"DEBIT",
-   amount:amt,
-   note:"Withdraw Request",
-   time:new Date().toLocaleString()
+   type: "DEBIT",
+   amount: amt,
+   note: "Withdraw Request",
+   time: new Date().toLocaleString()
  });
 
- save();
+ saveData();
  alert("Withdraw Requested");
 }
 
-// 🏦 Bank
+// 🏛️ BANK
 function addBank(){
  let bank = prompt("Bank Name");
- let acc = prompt("Account No");
- let ifsc = prompt("IFSC");
- user.bank = {bank,acc,ifsc};
- save();
+ let acc = prompt("Account Number");
+ let ifsc = prompt("IFSC Code");
+
+ user.bank = { bank, acc, ifsc };
+ saveData();
  alert("Bank Saved");
 }
 
@@ -194,17 +214,19 @@ function addBank(){
 function addUpi(){
  let upi = prompt("Enter UPI ID");
  user.upi = upi;
- save();
+ saveData();
  alert("UPI Saved");
 }
 
+// upload placeholder
 function uploadDeposit(){
  alert("Upload deposit image page");
 }
 
-function save(){
- localStorage.setItem("user_"+mobile,JSON.stringify(user));
- wallet.innerText = user.wallet;
+// save function
+function saveData(){
+ localStorage.setItem("user_"+mobile, JSON.stringify(user));
+ walletEl.innerText = user.wallet;
 }
 </script>
 

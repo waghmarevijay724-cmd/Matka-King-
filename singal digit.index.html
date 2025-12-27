@@ -1,4 +1,4 @@
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -47,10 +47,9 @@ button:disabled{opacity:.5}
 </div>
 
 <script>
-
 // ================= LOGIN =================
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.index.html";
+if(!mobile) location.href="login.html";
 
 let userKey = "user_"+mobile;
 let user = JSON.parse(localStorage.getItem(userKey)) || {
@@ -103,7 +102,7 @@ for(let i=0;i<=9;i++){
     oninput="addBid(${i},this.value)">
  `;
  digitGrid.appendChild(d);
-} // ✅ LOOP CLOSED PROPERLY
+}
 
 function addBid(d,p){
  p=Number(p);
@@ -160,5 +159,6 @@ submitBtn.onclick=()=>{
  location.reload();
 };
 </script>
+
 </body>
 </html>

@@ -1,60 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Add Fund</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add Money</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#f5f6f8}
+.header{background:#1c274a;color:#fff;padding:15px;text-align:center;font-size:18px}
+.box{background:#fff;margin:15px;padding:15px;border-radius:10px}
+input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:6px}
+button{width:100%;padding:12px;font-size:16px;border:none;border-radius:8px;margin-top:10px}
+.pay{background:#4caf50;color:#fff}
+.confirm{background:#ff8c42;color:#fff}
+</style>
 </head>
+
 <body>
 
-<h3>Add Fund</h3>
+<div class="header">Add Fund (UPI)</div>
 
-<input type="number" id="amount" placeholder="Enter Amount">
-<button onclick="addFund()">Add Fund</button>
+<div class="box">
+  <input type="number" id="amount" placeholder="Enter Amount">
 
-<p id="msg"></p>
+  <button class="pay" onclick="payNow()">Pay with PhonePe / Google Pay</button>
+
+  <button class="confirm" onclick="confirmPayment()">I Have Paid</button>
+</div>
 
 <script>
-// 🔐 Login check
-let mobile = localStorage.getItem("loggedUser");
-if(!mobile){
-  location.href="index.html";
+let mobile = localStorage.getItem("loggedUser") || "9999999999";
+localStorage.setItem("loggedUser", mobile);
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
+  wallet:0,
+  passbook:[]
+};
+
+let paidAmount = 0;
+
+/* OPEN UPI APP */
+function payNow(){
+ let amt = Number(document.getElementById("amount").value);
+ if(amt <= 0){
+   alert("Enter valid amount");
+   return;
+ }
+
+ paidAmount = amt;
+
+ let upi =
+ `upi://pay?pa=vijaywaghmare96@ybl&pn=Vijay%20Matka&am=${amt}&cu=INR`;
+
+ window.location.href = upi;
 }
 
-let user = JSON.parse(localStorage.getItem("user_"+mobile));
+/* CONFIRM & AUTO ADD WALLET */
+function confirmPayment(){
+ if(paidAmount <= 0){
+   alert("First make payment");
+   return;
+ }
 
-// safety for old users
-if(!user.passbook) user.passbook=[];
+ user.wallet += paidAmount;
 
-function addFund(){
+ user.passbook.push({
+   type:"CREDIT",
+   amount:paidAmount,
+   note:"UPI Add Fund",
+   time:new Date().toLocaleString()
+ });
 
-  let amt = Number(document.getElementById("amount").value);
+ localStorage.setItem("user_"+mobile, JSON.stringify(user));
 
-  if(amt<=0){
-    alert("Enter valid amount");
-    return;
-  }
-
-  // 💰 Wallet add
-  user.wallet += amt;
-
-  // 📘 Passbook entry
-  user.passbook.push({
-    type:"CREDIT",
-    amount:amt,
-    note:"Add Fund",
-    time:new Date().toLocaleString()
-  });
-
-  // 💾 Save
-  localStorage.setItem("user_"+mobile, JSON.stringify(user));
-
-  document.getElementById("msg").innerText =
-    "₹"+amt+" added successfully";
+ alert("Payment Successful\n₹"+paidAmount+" Added to Wallet");
+ location.href="funds.html";
 }
 </script>
-
-</body>
-</html>
 
 </body>
 </html>

@@ -31,6 +31,7 @@ body{
  border-radius:15px;
  display:flex;
  align-items:center;
+ cursor:pointer;
 }
 .icon{
  background:#ff8c42;
@@ -54,6 +55,7 @@ body{
  text-align:center;
  font-size:12px;
  color:#bbb;
+ cursor:pointer;
 }
 .bottom .active{color:#ff8c42}
 </style>
@@ -66,12 +68,10 @@ body{
  <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
-<div class="card" onclick="openaddmony()">
- <div class="icon">➕</div><span>
- Add Fund </span>
-  
+<div class="card" onclick="addFund()">
+ <div class="icon">➕</div>
+ <span>Add Fund</span>
 </div>
- 
 
 <div class="card" onclick="uploadDeposit()">
  <div class="icon">🏦</div>
@@ -83,12 +83,12 @@ body{
  <span>Withdraw Funds</span>
 </div>
 
-<div class="card" onclick="openDepositHistory()">
+<div class="card" onclick="location.href='deposithistory.html'">
  <div class="icon">📅</div>
- <span><div onclick="location.href='deposithistory.html'">Deposit History</div></span>
+ <span>Deposit History</span>
 </div>
 
-<div class="card" onclick="openWithdrawHistory()">
+<div class="card" onclick="location.href='withdrawal-history.html'">
  <div class="icon">💸</div>
  <span>Withdrawal History</span>
 </div>
@@ -105,24 +105,35 @@ body{
 
 <!-- Bottom Menu -->
 <div class="bottom">
- <div onclick="location.href='my Bids.insex.html'"⚖️<br>My Bids</div>
- <div onclick="location.href='passbook.insex.html'"📘<br>Passbook</div>
- <div onclick="location.href='dashboard2.insex.html'"🏠<br>Home</div>
+ <div onclick="location.href='mybids.html'">⚖️<br>My Bids</div>
+ <div onclick="location.href='passbook.html'">📘<br>Passbook</div>
+ <div onclick="location.href='dashboard.html'">🏠<br>Home</div>
  <div class="active">💰<br>Funds</div>
  <div>💬<br>Chat</div>
 </div>
 
 <script>
 let mobile = localStorage.getItem("loggedUser");
-let user = JSON.parse(localStorage.getItem("user_"+mobile));
-wallet.innerText = user.wallet || 0;
+if(!mobile){
+ mobile = "9999999999";
+ localStorage.setItem("loggedUser", mobile);
+}
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
+ wallet: 0,
+ passbook: []
+};
+
+wallet.innerText = user.wallet;
 
 // ➕ Add Fund
 function addFund(){
  let amt = prompt("Enter amount");
  if(!amt || amt<=0) return;
 
- user.wallet += Number(amt);
+ amt = Number(amt);
+ user.wallet += amt;
+
  user.depositHistory = user.depositHistory || [];
  user.depositHistory.push({
    amount:amt,
@@ -130,7 +141,6 @@ function addFund(){
    status:"SUCCESS"
  });
 
- user.passbook = user.passbook || [];
  user.passbook.push({
    type:"CREDIT",
    amount:amt,
@@ -146,9 +156,11 @@ function addFund(){
 function withdrawFund(){
  let amt = prompt("Enter withdraw amount");
  if(!amt || amt<=0) return;
+ amt = Number(amt);
+
  if(user.wallet < amt) return alert("Low balance");
 
- user.wallet -= Number(amt);
+ user.wallet -= amt;
 
  user.withdrawHistory = user.withdrawHistory || [];
  user.withdrawHistory.push({
@@ -186,16 +198,13 @@ function addUpi(){
  alert("UPI Saved");
 }
 
-// Dummy pages
-function uploadDeposit(){ alert("Upload deposit image page"); }
-function openDepositHistory(){ alert("Deposit history page"); }
-function openWithdrawHistory(){ alert("Withdraw history page"); }
+function uploadDeposit(){
+ alert("Upload deposit image page");
+}
 
 function save(){
  localStorage.setItem("user_"+mobile,JSON.stringify(user));
- wallet.innerText=user.wallet;
-}function openWithdrawHistory(){
- window.location.href="withdrawal-history.index.html";
+ wallet.innerText = user.wallet;
 }
 </script>
 

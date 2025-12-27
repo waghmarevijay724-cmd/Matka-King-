@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passbook History</title>
+
+<style>
+body{
+ font-family:Arial;
+ margin:0;
+ background:#f2f2f2;
+ padding-bottom:100px
+}
+
+.header{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ padding:12px;
+ background:#fff;
+ font-size:18px;
+ font-weight:bold;
+ border-bottom:1px solid #ddd
+}
+.header span{cursor:pointer}
+
+/* Table Head */
+.table-head{
+ display:flex;
+ background:#f5a000;
+ color:#fff;
+ font-weight:bold;
+ padding:10px;
+ font-size:13px
+}
+.col-no{flex:.6}
+.col-desc{flex:3}
+.col-point{flex:1;text-align:center}
+.col-bal{flex:1;text-align:right}
+
+/* Rows */
+.row{
+ background:#fff;
+ padding:10px;
+ border-bottom:1px solid #eee
+}
+.row-top{
+ display:flex;
+ align-items:center;
+ font-size:14px
+}
+
+.no{flex:.6;font-weight:bold}
+.desc{flex:3}
+.point{flex:1;text-align:center;font-weight:bold}
+.balance{flex:1;text-align:right;font-weight:bold}
+
+.green{color:#2e7d32}
+.red{color:#d32f2f}
+
+.time{
+ font-size:12px;
+ color:#888;
+ margin-top:4px
+}
+
+/* Pagination */
+.pagination{
+ position:fixed;
+ bottom:50px;
+ left:0;right:0;
+ display:flex;
+ justify-content:space-between;
+ padding:10px;
+ background:#fff;
+ border-top:1px solid #ccc
+}
+.pagination button{
+ padding:8px 14px;
+ border:none;
+ border-radius:6px;
+ background:#f5a000;
+ color:#fff;
+ font-size:14px;
+ cursor:pointer
+}
+.pagination button:disabled{
+ background:#ccc;
+ cursor:not-allowed
+}
+
+/* Bottom Nav */
+.bottom{
+ position:fixed;
+ bottom:0;left:0;right:0;
+ background:#fff;
+ display:flex;
+ justify-content:space-around;
+ padding:10px 0;
+ border-top:1px solid #ccc
+}
+.bottom .active{color:#f5a000;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+ <span onclick="history.back()">←</span> PASSBOOK HISTORY
+</div>
+
+<div class="table-head">
+ <div class="col-no">#</div>
+ <div class="col-desc">Description</div>
+ <div class="col-point">Points</div>
+ <div class="col-bal">Balance</div>
+</div>
+
+<div id="list"></div>
+
+<div class="pagination">
+ <button id="prevBtn" onclick="prevPage()">⬅ Previous</button>
+ <button id="nextBtn" onclick="nextPage()">Next ➡</button>
+</div>
+
+<div class="bottom">
+ <div onclick="go('mybids.html')">My Bids</div>
+ <div class="active">Passbook</div>
+ <div onclick="go('index.html')">Home</div>
+ <div onclick="go('funds.html')">Funds</div>
+</div>
+
+<script>
+// 🔐 LOGIN
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {};
+let passbook = user.passbook || [];
+let wallet = Number(user.wallet || 0);
+
+const perPage = 10;
+let currentPage = 1;
+let totalPages = Math.ceil(passbook.length / perPage);
+
+let box = document.getElementById("list");
+let prevBtn = document.getElementById("prevBtn");
+let nextBtn = document.getElementById("nextBtn");
+
+/* CALCULATE BALANCE FROM END */
+function getBalanceAt(index){
+ let bal = wallet;
+ for(let i = passbook.length - 1; i > index; i--){
+  if(passbook[i].type === "CREDIT"){
+   bal -= passbook[i].amount;
+  }else{
+   bal += passbook[i].amount;
+  }
+ }
+ return bal;
+}
+
+/* RENDER PAGE */
+function renderPage(){
+ box.innerHTML="";
+
+ if(passbook.length===0){
+  box.innerHTML = `<div style="text-align:center;margin:40px;color:#999">No history found</div>`;
+  return;
+ }
+
+ let start = passbook.length - (currentPage * perPage);
+ let end = start + perPage;
+
+ if(start < 0) start = 0;
+
+ let slice = passbook.slice(start, end);
+ let srNo = start + 1;
+ let runningBalance = getBalanceAt(end - 1);
+
+ slice.forEach(p=>{
+  let isCredit = p.type === "CREDIT";
+  let sign = isCredit ? "+" : "-";
+  let cls = isCredit ? "green" : "red";
+
+  box.innerHTML += `
+  <div class="row">
+   <div class="row-top">
+    <div class="no">${srNo++}</div>
+
+    <div class="desc">
+     ${p.market ? `BID ${p.market}` : 'Wallet'}<br>
+     ${p.session ? `${p.session} [ ${p.panaNo || ''} ]` : ''}
+    </div>
+
+    <div class="point ${cls}">
+     ${sign}₹${p.amount}
+    </div>
+
+    <div class="balance">
+     ₹${runningBalance}
+    </div>
+   </div>
+   <div class="time">${p.time || ''}</div>
+  </div>
+  `;
+
+  if(isCredit){
+   runningBalance -= p.amount;
+  }else{
+   runningBalance += p.amount;
+  }
+ });
+
+ prevBtn.disabled = currentPage === 1;
+ nextBtn.disabled = currentPage === totalPages;
+}
+
+/* Pagination */
+function nextPage(){
+ if(currentPage < totalPages){
+  currentPage++;
+  renderPage();
+ }
+}
+function prevPage(){
+ if(currentPage > 1){
+  currentPage--;
+  renderPage();
+ }
+}
+
+renderPage();
+
+function go(p){location.href=p}
+</script>
+
+</body>
+</html>

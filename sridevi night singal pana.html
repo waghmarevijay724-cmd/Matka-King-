@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Single Pana</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#f2f2f2}
+.header{display:flex;align-items:center;padding:10px;background:#fff}
+.wallet{margin-left:auto;background:#111;color:#fff;padding:5px 12px;border-radius:20px}
+.box{padding:15px}
+input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
+button{background:#f5a000;color:#fff;border:none;border-radius:25px;padding:12px;width:100%}
+table{width:100%;margin-top:15px;border-collapse:collapse;background:#fff}
+th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
+.bottom{
+ position:fixed;bottom:0;left:0;right:0;background:#fff;
+ padding:10px;display:flex;justify-content:space-between;
+ border-top:1px solid #ddd;gap:10px
+}
+#panaList{
+ position:absolute;background:#fff;width:100%;
+ border:1px solid #ccc;z-index:99;display:none;
+ max-height:200px;overflow:auto
+}
+#panaList div{padding:6px}
+#panaList div:hover{background:#f1f1f1;cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+ ← <b id="marketName"></b>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div class="box">
+
+<label>Game Type</label>
+<select id="betType">
+ <option value="OPEN">OPEN</option>
+ <option value="CLOSE">CLOSE</option>
+</select>
+
+<label>Single Pana</label>
+<div style="position:relative">
+ <input id="panaInput" placeholder="Search Pana" onkeyup="searchPana()">
+ <div id="panaList"></div>
+</div>
+
+<label>Points</label>
+<input id="points" type="number" placeholder="Enter points">
+
+<button onclick="addBid()">Add More</button>
+
+<table>
+<thead>
+<tr>
+ <th>Pana</th>
+ <th>Digit</th>
+ <th>Points</th>
+ <th>Type</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
+
+</div>
+
+<div class="bottom">
+ <div>Bids: <b id="bcount">0</b></div>
+ <div>Points: <b id="tpoints">0</b></div>
+ <button onclick="submitBids()">Submit</button>
+</div>
+
+<script>
+// 🔐 LOGIN CHECK
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+// 👤 USER
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {wallet:0,myBids:[],passbook:[]};
+wallet.innerText = user.wallet;
+
+// 📌 MARKET
+let market = localStorage.getItem("selectedMarket") || "MARKET";
+marketName.innerText = market;
+
+// 📦 TEMP DATA
+let bids=[];
+let total=0;
+
+// 🔢 SINGLE DIGIT
+function singleDigit(p){
+ return (p.split('').reduce((a,b)=>a+Number(b),0))%10;
+}
+
+// ➕ ADD BID
+function addBid(){
+ let pana=panaInput.value.trim();
+ let pts=Number(points.value);
+ let session=betType.value;
+
+ if(pana.length!==3) return alert("Select valid pana");
+ if(pts<=0) return alert("Enter points");
+ if(user.wallet < total+pts) return alert("Low balance");
+
+ bids.push({
+  panaNo:pana,
+  number:singleDigit(pana),
+  amount:pts,
+  session:session
+ });
+
+ total+=pts;
+ render();
+
+ panaInput.value="";
+ points.value="";
+}
+
+// 🔄 RENDER
+function render(){
+ list.innerHTML=bids.map(b=>`
+ <tr>
+  <td>${b.panaNo}</td>
+  <td>${b.number}</td>
+  <td>${b.amount}</td>
+  <td>${b.session}</td>
+ </tr>
+ `).join("");
+
+ bcount.innerText=bids.length;
+ tpoints.innerText=total;
+}
+
+// ✅ SUBMIT
+function submitBids(){
+ if(!bids.length) return alert("No bids");
+
+ user.wallet-=total;
+
+ bids.forEach(b=>{
+  user.myBids.push({
+   market:market,
+   game:"Single Pana",
+   session:b.session,
+   panaType:"Single Pana",
+   panaNo:b.panaNo,
+   number:b.number,        // 🔥 VERY IMPORTANT
+   amount:b.amount,
+   status:"PENDING",
+   winAmount:0,
+   time:new Date().toLocaleString()
+  });
+ });
+
+ user.passbook.push({
+  type:"DEBIT",
+  market:market,
+  session:bids[0].session,
+  panaType:"Single Pana",
+  panaNo:bids.map(b=>b.panaNo).join(", "),
+  amount:total,
+  time:new Date().toLocaleString()
+ });
+
+ localStorage.setItem("user_"+mobile,JSON.stringify(user));
+ alert("Single Pana Bid Submitted");
+ location.reload();
+}
+</script>
+
+<script>
+// 🔍 PANA SEARCH
+const singlePanaList=[
+"120","123","124","125","126","127","128","129","130",
+"134","135","136","137","138","139","140",
+"145","146","147","148","149","150",
+"156","157","158","159","160",
+"167","168","169","170",
+"178","179","180","189","190"
+];
+
+function searchPana(){
+ panaList.innerHTML="";
+ let v=panaInput.value.trim();
+ if(!v){panaList.style.display="none";return;}
+
+ singlePanaList.filter(p=>p.startsWith(v)).forEach(p=>{
+  let d=document.createElement("div");
+  d.innerText=p;
+  d.onclick=()=>{
+   panaInput.value=p;
+   panaList.style.display="none";
+  };
+  panaList.appendChild(d);
+ });
+ panaList.style.display="block";
+}
+</script>
+
+</body>
+</html>

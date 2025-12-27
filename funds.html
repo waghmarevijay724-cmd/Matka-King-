@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funds</title>
+
+<style>
+body{
+ margin:0;
+ font-family:Arial;
+ background:linear-gradient(#6a4b2c,#1c274a);
+ color:#fff;
+}
+.header{
+ display:flex;
+ align-items:center;
+ padding:15px;
+}
+.header h2{margin:0 10px}
+.wallet{
+ margin-left:auto;
+ background:#000;
+ padding:6px 12px;
+ border-radius:20px;
+}
+.card{
+ background:#1e274a;
+ margin:12px;
+ padding:18px;
+ border-radius:15px;
+ display:flex;
+ align-items:center;
+}
+.icon{
+ background:#ff8c42;
+ width:42px;height:42px;
+ border-radius:50%;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ margin-right:15px;
+}
+.card span{font-size:16px}
+.bottom{
+ position:fixed;
+ bottom:0;left:0;right:0;
+ background:#1c274a;
+ display:flex;
+ justify-content:space-around;
+ padding:10px 0;
+}
+.bottom div{
+ text-align:center;
+ font-size:12px;
+ color:#bbb;
+}
+.bottom .active{color:#ff8c42}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+ ← <h2>Mama<span style="color:#ffb000">567</span></h2>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div class="card" onclick="location.href='Funds_add.html'">
+ <div class="icon">➕</div><span>
+ Add Fund </span>
+  
+</div>
+
+<div class="card" onclick="uploadDeposit()">
+ <div class="icon">🏦</div>
+ <span>Manual Deposit Upload Image</span>
+</div>
+
+<div class="card" onclick="withdrawFund()">
+ <div class="icon">⬇️</div>
+ <span>Withdraw Funds</span>
+</div>
+
+<div class="card" onclick="openDepositHistory()">
+ <div class="icon">📅</div>
+ <span><div onclick="location.href='deposithistory.html'">Deposit History</div></span>
+</div>
+
+<div class="card" onclick="openWithdrawHistory()">
+ <div class="icon">💸</div>
+ <span>Withdrawal History</span>
+</div>
+
+<div class="card" onclick="addBank()">
+ <div class="icon">🏛️</div>
+ <span>Add Bank Details</span>
+</div>
+
+<div class="card" onclick="addUpi()">
+ <div class="icon">📲</div>
+ <span>Add UPI Details</span>
+</div>
+
+<!-- Bottom Menu -->
+<div class="bottom">
+ <div>⚖️<br>My Bids</div>
+ <div>📘<br>Passbook</div>
+ <div onclick="location.href='dashboard2.html'"🏠<br>🏠Home</div>
+ <div class="active">💰<br>Funds</div>
+ <div>💬<br>Chat</div>
+</div>
+
+<script>
+let mobile = localStorage.getItem("loggedUser");
+let user = JSON.parse(localStorage.getItem("user_"+mobile));
+wallet.innerText = user.wallet || 0;
+
+// ➕ Add Fund
+function addFund(){
+ let amt = prompt("Enter amount");
+ if(!amt || amt<=0) return;
+
+ user.wallet += Number(amt);
+ user.depositHistory = user.depositHistory || [];
+ user.depositHistory.push({
+   amount:amt,
+   time:new Date().toLocaleString(),
+   status:"SUCCESS"
+ });
+
+ user.passbook = user.passbook || [];
+ user.passbook.push({
+   type:"CREDIT",
+   amount:amt,
+   note:"Add Fund",
+   time:new Date().toLocaleString()
+ });
+
+ save();
+ alert("Fund Added");
+}
+
+// ⬇️ Withdraw
+function withdrawFund(){
+ let amt = prompt("Enter withdraw amount");
+ if(!amt || amt<=0) return;
+ if(user.wallet < amt) return alert("Low balance");
+
+ user.wallet -= Number(amt);
+
+ user.withdrawHistory = user.withdrawHistory || [];
+ user.withdrawHistory.push({
+   amount:amt,
+   time:new Date().toLocaleString(),
+   status:"PENDING"
+ });
+
+ user.passbook.push({
+   type:"DEBIT",
+   amount:amt,
+   note:"Withdraw Request",
+   time:new Date().toLocaleString()
+ });
+
+ save();
+ alert("Withdraw Requested");
+}
+
+// 🏦 Bank
+function addBank(){
+ let bank = prompt("Bank Name");
+ let acc = prompt("Account No");
+ let ifsc = prompt("IFSC");
+ user.bank = {bank,acc,ifsc};
+ save();
+ alert("Bank Saved");
+}
+
+// 📲 UPI
+function addUpi(){
+ let upi = prompt("Enter UPI ID");
+ user.upi = upi;
+ save();
+ alert("UPI Saved");
+}
+
+// Dummy pages
+function uploadDeposit(){ alert("Upload deposit image page"); }
+function openDepositHistory(){ alert("Deposit history page"); }
+function openWithdrawHistory(){ alert("Withdraw history page"); }
+
+function save(){
+ localStorage.setItem("user_"+mobile,JSON.stringify(user));
+ wallet.innerText=user.wallet;
+}function openWithdrawHistory(){
+ window.location.href="withdrawal-history.html";
+}
+</script>
+
+</body>
+</html>

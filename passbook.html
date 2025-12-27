@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passbook</title>
+
+<style>
+body{
+  font-family:Arial;
+  margin:0;
+  background:#f5f5f5;
+  padding-bottom:70px;
+}
+
+.header{
+  padding:12px;
+  background:#f5a000;
+  color:#fff;
+  font-size:18px;
+  text-align:center;
+  font-weight:bold
+}
+
+.search{background:#fff;padding:10px}
+.search input{
+  width:100%;padding:8px;
+  border-radius:6px;border:1px solid #ccc;
+  font-size:14px
+}
+
+.filter{
+  display:flex;justify-content:center;
+  gap:10px;padding:10px;background:#fff
+}
+.filter button{
+  padding:6px 14px;border:none;
+  border-radius:20px;font-size:13px;
+  cursor:pointer;background:#eee
+}
+.filter button.active{
+  background:#f5a000;color:#fff
+}
+
+.card{
+  background:#fff;
+  margin:10px;
+  padding:12px;
+  border-radius:8px;
+  box-shadow:0 1px 4px rgba(0,0,0,.1)
+}
+
+.time{font-size:12px;color:#666}
+.marketname{font-size:14px;font-weight:bold}
+
+.session{
+  display:inline-block;
+  padding:2px 8px;
+  font-size:11px;
+  border-radius:12px;
+  margin-left:6px;
+  color:#fff
+}
+.open{background:#28a745}
+.close{background:#dc3545}
+
+.pana{
+  background:#f1f1f1;
+  padding:4px 8px;
+  font-size:13px;
+  border-radius:6px;
+  margin-top:4px;
+  display:inline-block
+}
+
+.result{
+  margin-top:6px;
+  font-size:13px;
+  font-weight:bold
+}
+.win{color:green}
+.loss{color:red}
+
+.amount{
+  font-size:16px;
+  margin-top:4px;
+  font-weight:bold
+}
+.credit{color:green}
+.debit{color:red}
+
+.empty{
+  text-align:center;
+  margin-top:40px;
+  color:#999
+}
+
+.bottom{
+ position:fixed;bottom:0;left:0;right:0;
+ background:#fff;display:flex;
+ justify-content:space-around;
+ padding:10px 0;border-top:1px solid #ccc
+}
+.bottom .active{color:#ff9800;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<div class="header">Passbook</div>
+
+<div class="search">
+  <input type="text" id="searchMarket" placeholder="Search Market Name...">
+</div>
+
+<div class="filter">
+  <button class="active" onclick="filterSession('ALL',this)">All</button>
+  <button onclick="filterSession('OPEN',this)">Open</button>
+  <button onclick="filterSession('CLOSE',this)">Close</button>
+</div>
+
+<div id="history"></div>
+
+<div class="bottom">
+ <div onclick="go('mybids.html')">My Bids</div>
+ <div class="active">Passbook</div>
+ <div onclick="go('index.html')">Home</div>
+ <div onclick="go('funds.html')">Funds</div>
+</div>
+
+<script>
+// 🔐 LOGIN CHECK
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {};
+let allData = (user.passbook || []).slice().reverse();
+
+let currentSession="ALL";
+let box=document.getElementById("history");
+
+// 🖨 RENDER
+function render(data){
+ box.innerHTML="";
+ if(data.length===0){
+  box.innerHTML=`<div class="empty">No transactions found</div>`;
+  return;
+ }
+
+ data.forEach(p=>{
+  let isWin = p.result === "WIN";
+
+  box.innerHTML += `
+  <div class="card">
+   <div class="time">${p.time || ''}</div>
+
+   <div class="marketname">
+    ${p.market || 'Wallet'}
+    ${p.session ? `<span class="session ${p.session==='OPEN'?'open':'close'}">${p.session}</span>` : ''}
+   </div>
+
+   ${p.panaType ? `
+    <div class="pana">${p.panaType} : <b>${p.panaNo}</b></div>` : ''}
+
+   ${p.result ? `
+    <div class="result ${isWin?'win':'loss'}">
+      ${p.result} (${p.resultNo || '-'})
+    </div>` : ''}
+
+   <div class="amount ${isWin?'credit':'debit'}">
+     ${isWin?'WIN':'LOSS'} ₹${p.amount}
+   </div>
+  </div>`;
+ });
+}
+
+// 🔍 FILTER
+function filterSession(type,btn){
+ currentSession=type;
+ document.querySelectorAll('.filter button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ applyFilters();
+}
+
+document.getElementById("searchMarket").addEventListener("input",applyFilters);
+
+function applyFilters(){
+ let key=document.getElementById("searchMarket").value.toLowerCase();
+ let filtered=allData.filter(p=>{
+  let market=(p.market||'').toLowerCase();
+  let session=(p.session||'').toUpperCase();
+  let sMatch=currentSession==="ALL" || session===currentSession;
+  return sMatch && market.includes(key);
+ });
+ render(filtered);
+}
+
+// INIT
+render(allData);
+
+function go(p){location.href=p}
+</script>
+<script>
+function render(data){
+ box.innerHTML="";
+ if(data.length===0){
+  box.innerHTML=`<div class="empty">No transactions found</div>`;
+  return;
+ }
+
+ data.forEach(p=>{
+
+  let isGame = !!p.result;   // game ya wallet
+  let isWin  = p.result === "WIN";
+
+  let amountClass = isGame
+    ? (isWin ? 'credit' : 'debit')
+    : (p.type === 'CREDIT' ? 'credit' : 'debit');
+
+  let amountText = isGame
+    ? `${isWin ? 'WIN' : 'LOSS'} ₹${p.amount}`
+    : `${p.type === 'CREDIT' ? '+' : '-'} ₹${p.amount}`;
+
+  box.innerHTML += `
+  <div class="card">
+   <div class="time">${p.time || ''}</div>
+
+   <div class="marketname">
+    ${p.market || 'Wallet'}
+    ${p.session ? `<span class="session ${p.session==='OPEN'?'open':'close'}">${p.session}</span>` : ''}
+   </div>
+
+   ${p.panaType ? `
+    <div class="pana">${p.panaType} : <b>${p.panaNo}</b></div>` : ''}
+
+   ${isGame ? `
+    <div class="result ${isWin?'win':'loss'}">
+      ${p.result} (${p.resultNo || '-'})
+    </div>` : ''}
+
+   <div class="amount ${amountClass}">
+     ${amountText}
+   </div>
+  </div>`;
+ });
+}
+</script>
+</body>
+</html>

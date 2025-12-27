@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{font-family:Arial;background:#f5f5f5}
+.box{max-width:350px;margin:60px auto;background:#fff;padding:20px;border-radius:10px}
+input,button{width:100%;padding:10px;margin:8px 0}
+button{background:#4caf50;color:#fff;border:none;border-radius:5px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>Login</h2>
+
+<input type="tel" id="mobile" placeholder="Mobile Number">
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p>New user?
+<a href="signup.html">Signup</a>
+</p>
+</div>
+
+<script>
+function login(){
+  let mobile = document.getElementById("mobile").value;
+  let password = document.getElementById("password").value;
+
+  let userData = localStorage.getItem("user_"+mobile);
+
+  if(userData == null){
+    alert("User not found");
+    return;
+  }
+
+  let user = JSON.parse(userData);
+
+  if(user.password !== password){
+    alert("Wrong password");
+    return;
+  }
+
+  localStorage.setItem("loggedUser", mobile);
+  window.location.href="dashboard2.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Single Digit Ank</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f2f2f2;margin:0}
+.header{display:flex;align-items:center;padding:12px;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+.header b{font-size:16px}
+.wallet{margin-left:auto;background:#111;color:#fff;padding:6px 14px;border-radius:20px;font-size:14px}
+.box{padding:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row{background:#fff;padding:10px;border-radius:14px;display:flex;align-items:center}
+.digit{width:36px;height:36px;background:#eee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:10px}
+.row input{flex:1;padding:8px 12px;border-radius:20px;border:1px solid #ccc}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ddd}
+button{background:#f5a000;color:#fff;border:none;border-radius:25px;padding:12px 28px;font-size:16px}
+button:disabled{opacity:.5}
+.open{color:green;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+ <b id="marketName">MARKET</b>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<div class="box">
+ <select id="gameType">
+  <option value="OPEN">OPEN</option>
+  <option value="CLOSE">CLOSE</option>
+ </select>
+
+ <p id="marketStatus"></p>
+ <div class="grid" id="digitGrid"></div>
+</div>
+
+<div class="bottom">
+ <div>Bids: <b id="bcount">0</b></div>
+ <div>Points: <b id="tpoints">0</b></div>
+ <button id="submitBtn">Submit</button>
+</div>
+
+<script>
+// ================= LOGIN =================
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+let userKey = "user_"+mobile;
+let user = JSON.parse(localStorage.getItem(userKey)) || {
+ name:"User",
+ wallet:0,
+ myBids:[],
+ passbook:[]
+};
+
+marketName.innerText = localStorage.getItem("selectedMarket") || "MARKET";
+wallet.innerText = user.wallet;
+
+// ================= TIME =================
+let openTime="01:00", closeTime="23:30";
+function makeDate(t){
+ let d=new Date(); let [h,m]=t.split(":");
+ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m,0);
+}
+const openDate=makeDate(openTime), closeDate=makeDate(closeTime);
+
+function timer(){
+ let now=new Date();
+ if(now<openDate){
+  marketStatus.innerText="❌ Market Not Opened";
+  submitBtn.disabled=true;
+ }
+ else if(now>=openDate && now<closeDate){
+  marketStatus.innerHTML =
+   gameType.value==="OPEN"
+   ? "<span class='open'>✅ OPEN Running</span>"
+   : "⏳ OPEN Closed | CLOSE Running";
+  submitBtn.disabled=false;
+ }
+ else{
+  marketStatus.innerText="❌ Betting Closed";
+  submitBtn.disabled=true;
+ }
+}
+setInterval(timer,1000); timer();
+
+// ================= GRID =================
+let bids=[], total=0;
+
+for(let i=0;i<=9;i++){
+ let d=document.createElement("div");
+ d.className="row";
+ d.innerHTML=`
+   <div class="digit">${i}</div>
+   <input type="number" min="0" placeholder="Points"
+    oninput="addBid(${i},this.value)">
+ `;
+ digitGrid.appendChild(d);
+}
+
+function addBid(d,p){
+ p=Number(p);
+ bids=bids.filter(b=>b.digit!==d);
+ if(p>0) bids.push({digit:d,amount:p});
+ calc();
+}
+
+function calc(){
+ total=bids.reduce((s,b)=>s+b.amount,0);
+ bcount.innerText=bids.length;
+ tpoints.innerText=total;
+}
+
+gameType.onchange=()=>{
+ bids=[]; total=0;
+ bcount.innerText=0; tpoints.innerText=0;
+ document.querySelectorAll(".row input").forEach(i=>i.value="");
+ timer();
+};
+
+// ================= SUBMIT =================
+submitBtn.onclick=()=>{
+ if(!bids.length) return alert("Enter points");
+ if(user.wallet<total) return alert("Low balance");
+
+ let session = gameType.value;
+
+ user.wallet -= total;
+
+ bids.forEach(b=>{
+  // 🟡 SAVE BET
+  user.myBids.push({
+   market:marketName.innerText,
+   game:"Single Digit",
+   number:b.digit,
+   amount:b.amount,
+   session:session,
+   status:"PENDING"
+  });
+
+  // 🔴 PASSBOOK DEBIT
+  user.passbook.push({
+   type:"DEBIT",
+   market:marketName.innerText,
+   session:session,
+   panaType:"Single Digit",
+   panaNo:b.digit,
+   result:"BET",
+   amount:b.amount,
+   time:new Date().toLocaleString()
+  });
+ });
+
+ localStorage.setItem(userKey,JSON.stringify(user));
+ alert("Bet Submitted Successfully");
+ location.reload();
+};
+</script>
+
+</body>
+</html>

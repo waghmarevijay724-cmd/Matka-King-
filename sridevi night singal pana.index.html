@@ -78,7 +78,7 @@ th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
 <script>
 // 🔐 LOGIN CHECK
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.html";
+if(!mobile) location.href="login.index.html";
 
 // 👤 USER
 let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {wallet:0,myBids:[],passbook:[]};

@@ -75,7 +75,7 @@ body{margin:0;font-family:Arial;background:#f2f2f2}
 <script>
 // 🔐 LOGIN
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.html";
+if(!mobile) location.href="login.index.html";
 
 let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
  wallet:0,

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mama567 Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{margin:0;font-family:Arial;background:#f6f6f6}
+.blink{animation:blink 1s infinite;color:green;font-weight:bold}
+@keyframes blink{50%{opacity:0}}
+
+.header{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:12px;background:#fff
+}
+.logo{font-weight:bold;color:#ff9800;font-size:18px}
+.user{font-size:13px}
+.wallet{
+ background:#111;color:#fff;
+ padding:6px 12px;border-radius:20px
+}
+
+.card{
+ background:#fff;margin:10px;padding:12px;
+ border-radius:12px;
+ box-shadow:0 2px 5px rgba(0,0,0,.1);
+ display:flex;justify-content:space-between;align-items:center
+}
+
+.play{
+ width:45px;height:45px;border-radius:50%;
+ background:#ff9800;color:#fff;
+ display:flex;align-items:center;justify-content:center
+}
+.play button{
+ background:none;border:none;color:#fff;
+ font-size:20px;cursor:pointer
+}
+button:disabled{opacity:.5}
+
+.result-box{
+ margin-top:6px;padding:6px 10px;
+ background:#f9f9f9;border-radius:8px;text-align:center
+}
+.result-title{font-size:12px;color:#777}
+.result-value{font-size:16px;font-weight:bold}
+.pending{color:#ff9800}
+.complete{color:#2e7d32}
+
+.bottom{
+ position:fixed;bottom:0;left:0;right:0;
+ background:#fff;display:flex;
+ justify-content:space-around;
+ padding:10px 0;border-top:1px solid #ccc
+}
+.active{color:#ff9800;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+ <div>
+  <div class="logo">Mama567</div>
+  <div class="user" id="username"></div>
+ </div>
+ <div class="wallet">₹ <span id="wallet">0</span></div>
+</div>
+
+<marquee>🔥 Fast Withdrawal | Min Bet ₹1 | Trusted Panel</marquee>
+<center><h3>Market Bazar</h3></center>
+
+<div id="markets"></div>
+
+<br><br><br><br>
+
+<!-- BOTTOM -->
+<div class="bottom">
+ <div onclick="go('my bids.html')">My Bids</div>
+ <div onclick="go('passbook2.html')">Passbook</div>
+ <div class="active">Home</div>
+ <div onclick="go('funds.html')">Funds</div>
+ <div onclick="logout()">Logout</div>
+</div>
+
+<script>
+// 🔐 LOGIN
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="login.html";
+
+let userKey = "user_"+mobile;
+let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User",wallet:0};
+
+username.innerText = "Hello, " + user.name;
+wallet.innerText = user.wallet || 0;
+
+// 🔗 NAV
+function go(p){location.href=p}
+function logout(){
+ localStorage.removeItem("loggedUser");
+ location.href="login.html";
+}
+function openMarket(m){
+ localStorage.setItem("selectedMarket",m);
+ location.href="sridevi night ank dashboard.html";
+}
+
+// ⏱ MARKET DATA
+const markets = [
+ {name:"SRIDEVI",open:"01:00",close:"12:35"},
+ {name:"TIME BAZAR",open:"01:00",close:"14:00"},
+ {name:"MILAN DAY",open:"01:00",close:"16:55"},
+ {name:"KALYAN",open:"01:00",close:"1:11"},
+ {name:"SRIDEVI NIGHT",open:"1:15",close:"20:15"},
+ {name:"MILAN NIGHT",open:"21:15",close:"22:15"},
+ {name:"KALYAN NIGHT",open:"22:15",close:"23:15"}
+];
+
+// 📊 RESULTS
+function getResults(){
+ return JSON.parse(localStorage.getItem("marketResults")) || {};
+}
+
+// ⏱ TIME HELPERS
+function toDate(t){
+ let d=new Date();
+ let [h,m]=t.split(":");
+ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m,0);
+}
+function getStatus(open,close){
+ let now=new Date();
+ if(now < open) return "NOTOPEN";
+ if(now >= open && now <= close) return "RUNNING";
+ return "CLOSED";
+}
+
+// 🧱 BUILD UI
+let box=document.getElementById("markets");
+
+function buildUI(){
+ box.innerHTML="";
+ let results=getResults();
+
+ markets.forEach((m,i)=>{
+  let r = results[m.name];
+  let resText = "Result Pending";
+  let resClass = "pending";
+
+  if(r){
+    // OPEN DECLARED ONLY
+    if(r.openPana && r.openSingle && !r.closePana){
+      resText = `${r.openPana}-${r.openSingle}-***`;
+    }
+    // FULL RESULT
+    if(r.openPana && r.openSingle && r.closeSingle && r.closePana){
+      resText = `${r.openPana}-${r.openSingle}${r.closeSingle}-${r.closePana}`;
+      resClass = "complete";
+    }
+  }
+
+  box.innerHTML+=`
+  <div class="card">
+   <div>
+    <h4>${m.name}</h4>
+    <p id="status${i}"></p>
+
+    <div class="result-box">
+     <div class="result-title">Result</div>
+     <div class="result-value ${resClass}" id="res${i}">
+       ${resText}
+     </div>
+    </div>
+
+    <small>Open: ${m.open} | Close: ${m.close}</small>
+   </div>
+
+   <div class="play">
+    <button id="btn${i}" onclick="openMarket('${m.name}')">▶</button>
+   </div>
+  </div>
+  `;
+
+  let st=document.getElementById("status"+i);
+  let btn=document.getElementById("btn"+i);
+
+  function update(){
+   let s=getStatus(toDate(m.open),toDate(m.close));
+   if(s==="NOTOPEN"){
+    st.innerText="Market Not Open";
+    btn.disabled=true;
+   }
+   if(s==="RUNNING"){
+    st.innerHTML="<span class='blink'>Market Running</span>";
+    btn.disabled=false;
+   }
+   if(s==="CLOSED"){
+    st.innerText="Market Closed";
+    btn.disabled=true;
+   }
+  }
+  update();
+  setInterval(update,1000);
+ });
+}
+
+// 🔄 LIVE REFRESH
+buildUI();
+setInterval(()=>{
+ user = JSON.parse(localStorage.getItem(userKey)) || user;
+ wallet.innerText = user.wallet || 0;
+ buildUI();
+},5000);
+</script>
+
+</body>
+</html>

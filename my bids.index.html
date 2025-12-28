@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,173 +7,132 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{margin:0;font-family:Arial;background:#f2f2f2}
-
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f2f2f2;
+  padding-bottom:60px;
+}
 .header{
- display:flex;align-items:center;
- padding:12px;background:#fff;
- box-shadow:0 2px 5px rgba(0,0,0,.1)
+  background:#fff;
+  padding:12px;
+  font-size:18px;
+  font-weight:bold;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
-.back{font-size:18px;margin-right:10px;cursor:pointer}
-.title{font-weight:bold;font-size:16px}
 .wallet{
- margin-left:auto;background:#111;color:#fff;
- padding:5px 12px;border-radius:20px;font-size:13px
+  float:right;
+  background:#111;
+  color:#fff;
+  padding:4px 10px;
+  border-radius:4px;
+  font-size:14px;
 }
-
-.card{
- background:#fff;margin:10px;
- border-radius:12px;
- padding:10px;
- box-shadow:0 2px 5px rgba(0,0,0,.1)
+.table-wrap{
+  padding:10px;
 }
-
-.market{font-weight:bold;color:#ff9800}
-.row{
- display:flex;
- justify-content:space-between;
- font-size:13px;
- margin-top:6px
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
 }
-
-.badge{
- padding:3px 10px;
- border-radius:12px;
- font-size:11px;
- color:#fff
+th,td{
+  padding:8px;
+  border-bottom:1px solid #ddd;
+  font-size:13px;
+  text-align:center;
 }
-.win{background:green}
-.loss{background:red}
-.pending{background:#ff9800}
-
-.session{
- padding:2px 8px;
- font-size:10px;
- border-radius:10px;
- color:#fff
+th{
+  background:#222;
+  color:#fff;
+  position:sticky;
+  top:0;
 }
-.open{background:#2196f3}
-.close{background:#9c27b0}
-
-.empty{
- text-align:center;color:#777;margin-top:50px
+.no-data{
+  padding:20px;
+  text-align:center;
+  color:#777;
 }
-.winamt{color:green;font-weight:bold}
+.clear-btn{
+  margin:10px;
+  padding:10px;
+  width:calc(100% - 20px);
+  background:red;
+  color:#fff;
+  border:none;
+  border-radius:5px;
+  font-size:16px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
- <div class="back" onclick="history.back()">←</div>
- <div class="title">My Bids</div>
- <div class="wallet">₹ <span id="wallet">0</span></div>
+  My Bids
+  <span class="wallet">₹ <span id="walletBal">0</span></span>
 </div>
 
-<div id="bidList"></div>
+<div class="table-wrap">
+<table id="bidTable">
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Time</th>
+  <th>Game</th>
+  <th>Open/Close</th>
+  <th>Bid</th>
+  <th>Points</th>
+  <th>Balance</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<div id="noData" class="no-data">No Bids Found</div>
+</div>
+
+<button class="clear-btn" onclick="clearHistory()">Clear History</button>
 
 <script>
-// 🔐 LOGIN
-let mobile = localStorage.getItem("loggedUser");
-if(!mobile) location.href="login.index.html";
+let bidHistory = JSON.parse(localStorage.getItem("bidHistory")) || [];
+let wallet = localStorage.getItem("walletBalance") || 0;
 
-let user = JSON.parse(localStorage.getItem("user_"+mobile)) || {
- wallet:0,
- bids:[]
-};
-wallet.innerText = user.wallet || 0;
+document.getElementById("walletBal").innerText = wallet;
 
-let bids = user.bids || [];
-let box = document.getElementById("bidList");
+function loadBids(){
+  const tbody = document.querySelector("#bidTable tbody");
+  tbody.innerHTML = "";
 
-// 🎯 UPDATE WIN / LOSS + WIN AMOUNT
-function updateBidStatus(){
- let results = JSON.parse(localStorage.getItem("marketResults")) || {};
-
- bids.forEach(b=>{
-  let r = results[b.market];
-  if(!r){
-   b.status="PENDING";
-   b.winAmount=0;
-   return;
+  if(bidHistory.length === 0){
+    document.getElementById("noData").style.display="block";
+    return;
   }
 
-  let resultDigit =
-   b.session==="OPEN" ? r.openSingle :
-   b.session==="CLOSE" ? r.closeSingle : null;
+  document.getElementById("noData").style.display="none";
 
-  if(resultDigit===undefined || resultDigit===null){
-   b.status="PENDING";
-   b.winAmount=0;
-  }
-  else if(Number(b.number) === Number(resultDigit)){
-   b.status="WIN";
-   b.winAmount = b.amount * 9;   // 💰 PAYOUT
-  }
-  else{
-   b.status="LOSS";
-   b.winAmount=0;
-  }
- });
-
- localStorage.setItem("user_"+mobile,JSON.stringify(user));
+  bidHistory.reverse().forEach(bid=>{
+    let tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${bid.date}</td>
+      <td>${bid.time}</td>
+      <td>${bid.game}</td>
+      <td>${bid.session}</td>
+      <td>${bid.number}</td>
+      <td>${bid.points}</td>
+      <td>₹${bid.balance}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-// 🧾 RENDER BIDS
-function renderBids(){
- box.innerHTML="";
- if(bids.length===0){
-  box.innerHTML="<div class='empty'>No bids found</div>";
-  return;
- }
-
- bids.slice().reverse().forEach(b=>{
-  let statusClass =
-   b.status==="WIN" ? "win" :
-   b.status==="LOSS" ? "loss" : "pending";
-
-  box.innerHTML+=`
-  <div class="card">
-   <div class="market">${b.market}</div>
-
-   <div class="row">
-    <div>${b.game || 'Single Digit'}</div>
-    <div class="session ${b.session==='OPEN'?'open':'close'}">${b.session}</div>
-   </div>
-
-   <div class="row">
-    <div>Digit</div>
-    <div><b>${b.number}</b></div>
-   </div>
-
-   <div class="row">
-    <div>Bet Amount</div>
-    <div>₹${b.amount}</div>
-   </div>
-
-   <div class="row">
-    <div>Status</div>
-    <div class="badge ${statusClass}">${b.status}</div>
-   </div>
-
-   <div class="row">
-    <div>Win Amount</div>
-    <div class="winamt">₹${b.winAmount || 0}</div>
-   </div>
-  </div>`;
- });
+function clearHistory(){
+  if(confirm("Clear all bid history?")){
+    localStorage.removeItem("bidHistory");
+    location.reload();
+  }
 }
 
-// 🔄 AUTO REFRESH (Admin result ke baad)
-function refresh(){
- updateBidStatus();
- renderBids();
- wallet.innerText = user.wallet;
-}
-
-refresh();
-setInterval(refresh,5000); // every 5 sec
+loadBids();
 </script>
 
 </body>

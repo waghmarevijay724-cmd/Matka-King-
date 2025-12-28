@@ -65,7 +65,7 @@ document.getElementById("walletBal").innerText = wallet;
   if(m2) return m2.value;
 
   return "Unknown Market";
- }
+ }let marketName = localStorage.getItem("selectedMarket") || "UNKNOWN";
 function getMarketName(){
   let el = document.getElementById("marketName");
   return el ? el.innerText.trim() : "Unknown Market";
@@ -101,7 +101,15 @@ function submitSingleDigit(){
   number: digit,
   points: points,
   balance: wallet
- });
+ });user.myBids.push({
+  date: date,
+  time: time,
+  marketName: marketName,   // ⭐ FIX
+  openClose: session,
+  bid: digit,
+  points: points,
+  balance: user.wallet
+});
 
  localStorage.setItem("walletBalance", wallet);
  localStorage.setItem("bidHistory", JSON.stringify(history));

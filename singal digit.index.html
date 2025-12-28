@@ -35,8 +35,7 @@ button{
 
 <body>
 
-<div class="header">
-  <b id="marketName">MARKET</b>
+<div class="header" id="marketName">MILAN DAY</div>
  <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
@@ -67,7 +66,10 @@ document.getElementById("walletBal").innerText = wallet;
 
   return "Unknown Market";
  }
-
+function getMarketName(){
+  let el = document.getElementById("marketName");
+  return el ? el.innerText.trim() : "Unknown Market";
+}
 function submitSingleDigit(){
 
  let digit = document.getElementById("digit").value;
@@ -94,7 +96,7 @@ function submitSingleDigit(){
  history.push({
   date: now.toLocaleDateString(),
   time: now.toLocaleTimeString(),
-  marketNamae: "marketName",
+  marketNamae: "market",
   session: type,
   number: digit,
   points: points,

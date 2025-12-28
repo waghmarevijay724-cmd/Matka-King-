@@ -13,50 +13,30 @@ body{
  color:#fff;
 }
 .header{
- display:flex;
- align-items:center;
- padding:15px;
+ display:flex;align-items:center;padding:15px
 }
 .header h2{margin:0 10px}
 .wallet{
- margin-left:auto;
- background:#000;
- padding:6px 12px;
- border-radius:20px;
+ margin-left:auto;background:#000;
+ padding:6px 12px;border-radius:20px
 }
 .card{
- background:#1e274a;
- margin:12px;
- padding:18px;
- border-radius:15px;
- display:flex;
- align-items:center;
- cursor:pointer;
+ background:#1e274a;margin:12px;padding:18px;
+ border-radius:15px;display:flex;
+ align-items:center;cursor:pointer
 }
 .icon{
- background:#ff8c42;
- width:42px;height:42px;
- border-radius:50%;
- display:flex;
- justify-content:center;
- align-items:center;
- margin-right:15px;
+ background:#ff8c42;width:42px;height:42px;
+ border-radius:50%;display:flex;
+ justify-content:center;align-items:center;
+ margin-right:15px
 }
-.card span{font-size:16px}
 .bottom{
- position:fixed;
- bottom:0;left:0;right:0;
- background:#1c274a;
- display:flex;
- justify-content:space-around;
- padding:10px 0;
+ position:fixed;bottom:0;left:0;right:0;
+ background:#1c274a;display:flex;
+ justify-content:space-around;padding:10px 0
 }
-.bottom div{
- text-align:center;
- font-size:12px;
- color:#bbb;
- cursor:pointer;
-}
+.bottom div{font-size:12px;color:#bbb;text-align:center}
 .bottom .active{color:#ff8c42}
 </style>
 </head>
@@ -68,117 +48,81 @@ body{
  <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
-<!-- ADD FUND -->
-<div class="card" onclick="addFund()">
- <div class="icon">➕</div>
- <span>Add Fund</span>
-</div>
+<div class="card" onclick="addFund()"><div class="icon">➕</div><span>Add Fund</span></div>
+<div class="card" onclick="withdrawFund()"><div class="icon">⬇️</div><span>Withdraw Funds</span></div>
+<div class="card" onclick="location.href='passbook.index.html'"><div class="icon">📘</div><span>Passbook</span></div>
+<div class="card" onclick="addBank()"><div class="icon">🏛️</div><span>Add Bank</span></div>
+<div class="card" onclick="addUpi()"><div class="icon">📲</div><span>Add UPI</span></div>
 
-<div class="card" onclick="uploadDeposit()">
- <div class="icon">🏦</div>
- <span>Manual Deposit Upload Image</span>
-</div>
-
-<div class="card" onclick="withdrawFund()">
- <div class="icon">⬇️</div>
- <span>Withdraw Funds</span>
-</div>
-
-<div class="card" onclick="location.href='deposithistory.html'">
- <div class="icon">📅</div>
- <span>Deposit History</span>
-</div>
-
-<div class="card" onclick="location.href='withdrawal-history.index.html'">
- <div class="icon">💸</div>
- <span>Withdrawal History</span>
-</div>
-
-<div class="card" onclick="addBank()">
- <div class="icon">🏛️</div>
- <span>Add Bank Details</span>
-</div>
-
-<div class="card" onclick="addUpi()">
- <div class="icon">📲</div>
- <span>Add UPI Details</span>
-</div>
-
-<!-- Bottom Menu -->
 <div class="bottom">
- <div onclick="location.href='mybids.index.html'">⚖️<br>My Bids</div>
+ <div onclick="location.href='my bids.index.html'">⚖️<br>My Bids</div>
  <div onclick="location.href='passbook.index.html'">📘<br>Passbook</div>
  <div onclick="location.href='dashboard2.index.html'">🏠<br>Home</div>
  <div class="active">💰<br>Funds</div>
- <div>💬<br>Chat</div>
 </div>
 
 <script>
-const walletEl = document.getElementById("wallet");
-
+// 🔐 LOGIN
 let mobile = localStorage.getItem("loggedUser");
-if(!mobile){
- mobile = "9999999999";
- localStorage.setItem("loggedUser", mobile);
-}
+if(!mobile) location.href="index.html";
 
-let user = JSON.parse(localStorage.getItem("user_"+mobile));
-if(!user){
- user = { wallet: 0 };
-}
+let userKey = "user_"+mobile;
+let user = JSON.parse(localStorage.getItem(userKey)) || {wallet:0,passbook:[]};
 
-walletEl.innerText = user.wallet || 0;
+const walletEl = document.getElementById("wallet");
+walletEl.innerText = user.wallet;
 
-/* ✅ ADD FUND REDIRECT */
+// ➕ ADD FUND (REDIRECT)
 function addFund(){
- window.location.href = "addmony.index.html";
+ location.href="addmony.index.html";
 }
 
-/* Withdraw */
+// ⬇️ WITHDRAW
 function withdrawFund(){
- let amt = prompt("Enter withdraw amount");
- amt = Number(amt);
-
- if(isNaN(amt) || amt <= 0){
-   alert("Invalid amount");
-   return;
+ let amt = Number(prompt("Enter withdraw amount"));
+ if(isNaN(amt) || amt<=0){
+  alert("Invalid amount"); return;
  }
-
  if(user.wallet < amt){
-   alert("Low balance");
-   return;
+  alert("Low balance"); return;
  }
 
  user.wallet -= amt;
- saveData();
- alert("Withdraw Requested");
+
+ user.passbook.push({
+  time: new Date().toLocaleString(),
+  market: "Wallet",
+  type: "DEBIT",
+  amount: amt
+ });
+
+ saveUser();
+ alert("Withdraw request submitted");
 }
 
-/* Bank */
+// 🏛️ BANK
 function addBank(){
  let bank = prompt("Bank Name");
- let acc = prompt("Account Number");
+ let acc  = prompt("Account Number");
  let ifsc = prompt("IFSC Code");
- user.bank = { bank, acc, ifsc };
- saveData();
- alert("Bank Saved");
+ if(!bank || !acc || !ifsc) return;
+ user.bank = {bank,acc,ifsc};
+ saveUser();
+ alert("Bank details saved");
 }
 
-/* UPI */
+// 📲 UPI
 function addUpi(){
  let upi = prompt("Enter UPI ID");
+ if(!upi) return;
  user.upi = upi;
- saveData();
- alert("UPI Saved");
+ saveUser();
+ alert("UPI saved");
 }
 
-function uploadDeposit(){
- alert("Upload deposit image page");
-}
-
-function saveData(){
- localStorage.setItem("user_"+mobile, JSON.stringify(user));
- walletEl.innerText = user.wallet || 0;
+function saveUser(){
+ localStorage.setItem(userKey, JSON.stringify(user));
+ walletEl.innerText = user.wallet;
 }
 </script>
 

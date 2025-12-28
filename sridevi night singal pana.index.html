@@ -147,6 +147,7 @@ function addBid(){
   function getMarketName(){
   let el = document.getElementById("marketName");
   return el ? el.innerText.trim() : "Unknown Market";
+    let marketName = localStorage.getItem("selectedMarket") || "UNKNOWN";
   }
 
   if(pana==="" || isNaN(points)){

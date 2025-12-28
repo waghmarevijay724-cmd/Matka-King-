@@ -243,7 +243,31 @@ function render(data){
    </div>
   </div>`;
  });
-}
+}let marketName = getMarketName();
+let time = new Date().toLocaleString();
+
+// MY BIDS
+user.myBids.push({
+  market: marketName,
+  session: session,
+  panaType: "Single Digit",
+  panaNo: digit,
+  points: points,
+  time: time
+});
+
+// PASSBOOK
+user.passbook.push({
+  market: marketName,
+  session: session,
+  panaType: "Single Digit",
+  panaNo: digit,
+  amount: points,
+  result: "PENDING",
+  time: time
+});
+
+localStorage.setItem("user_"+mobile, JSON.stringify(user));
 </script>
 </body>
 </html>

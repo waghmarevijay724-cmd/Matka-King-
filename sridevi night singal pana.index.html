@@ -136,31 +136,28 @@ th{background:#eee}
 </div>
 
 <script>
-let wallet = parseInt(localStorage.getItem("walletBalance") || "1100");
+let wallet = parseInt(localStorage.getItem("walletBalance") || "0");
 document.getElementById("walletBal").innerText = wallet;
 
 function addBid(){
-  let pana = document.getElementById("pana").value;
-  
-  let points = document.getElementById("points").value;
+  let pana = document.getElementById("pana").value.trim();
+  let points = parseInt(document.getElementById("points").value);
   let type = document.getElementById("gameType").value;
 
-  if(pana==="" || points===""){
-    alert("Fill all fields");
+  if(pana==="" || isNaN(points)){
+    alert("Enter valid pana & points");
     return;
   }
 
   let tr = document.createElement("tr");
   tr.innerHTML = `
     <td>${pana}</td>
-    
     <td>${points}</td>
     <td>${type}</td>
   `;
   document.getElementById("bidBody").appendChild(tr);
 
   document.getElementById("pana").value="";
-  
   document.getElementById("points").value="";
 
   updateSummary();
@@ -169,21 +166,29 @@ function addBid(){
 function updateSummary(){
   let rows = document.querySelectorAll("#bidBody tr");
   let total = 0;
+
   rows.forEach(r=>{
-    total += parseInt(r.cells[2].innerText);
+    let p = parseInt(r.cells[1].innerText);
+    if(!isNaN(p)) total += p;
   });
+
   document.getElementById("bidCount").innerText = rows.length;
   document.getElementById("totalPoints").innerText = total;
 }
 
 function submitBids(){
   let rows = document.querySelectorAll("#bidBody tr");
-  if(rows.length===0){
+  if(rows.length === 0){
     alert("No bids added");
     return;
   }
 
   let total = parseInt(document.getElementById("totalPoints").innerText);
+  if(isNaN(total) || total <= 0){
+    alert("Invalid total points");
+    return;
+  }
+
   if(total > wallet){
     alert("Low Wallet Balance");
     return;
@@ -194,9 +199,8 @@ function submitBids(){
 
   rows.forEach(r=>{
     let pana = r.cells[0].innerText;
-    
-    let points = parseInt(r.cells[2].innerText);
-    let type = r.cells[3].innerText;
+    let points = parseInt(r.cells[1].innerText);
+    let type = r.cells[2].innerText;
 
     wallet -= points;
 
@@ -205,7 +209,7 @@ function submitBids(){
       time: now.toLocaleTimeString(),
       game: "Single Pana",
       session: type,
-      number: pana + " (" + digit + ")",
+      number: pana,
       points: points,
       balance: wallet
     });
@@ -214,10 +218,7 @@ function submitBids(){
   localStorage.setItem("walletBalance", wallet);
   localStorage.setItem("bidHistory", JSON.stringify(history));
 
-  alert("Bids Submitted Successfully");
+  alert("Bid Submitted Successfully");
   window.location.href = "my-bids.index.html";
 }
-</script>
-
-</body>
-</html>
+    </script>

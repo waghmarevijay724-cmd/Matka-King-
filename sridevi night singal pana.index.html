@@ -90,8 +90,7 @@ th{background:#eee}
 
 <body>
 
-<div class="header">
-  ←  <b id="marketName">MARKET</b>
+<div class="header" id="marketName"></div>
   <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
@@ -145,6 +144,10 @@ function addBid(){
   let pana = document.getElementById("pana").value.trim();
   let points = parseInt(document.getElementById("points").value);
   let type = document.getElementById("gameType").value;
+  function getMarketName(){
+  let el = document.getElementById("marketName");
+  return el ? el.innerText.trim() : "Unknown Market";
+  }
 
   if(pana==="" || isNaN(points)){
     alert("Enter valid pana & points");
@@ -209,7 +212,7 @@ function submitBids(){
     history.push({
       date: now.toLocaleDateString(),
       time: now.toLocaleTimeString(),
-      market: "marketName",
+      marketName: "market",
       session: type,
       number: pana,
       points: points,

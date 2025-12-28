@@ -36,7 +36,7 @@ button{
 <body>
 
 <div class="header">
- ← Single Digit
+  <b id="marketName">MARKET</b>
  <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
@@ -76,6 +76,15 @@ function submitSingleDigit(){
  }
 
  wallet -= points;
+ function getMarketName(){
+  let m1 = document.getElementById("marketName");
+  if(m1) return m1.innerText.trim();
+
+  let m2 = document.getElementById("market");
+  if(m2) return m2.value;
+
+  return "Unknown Market";
+ }
 
  // ✅ SAVE BID HISTORY
  let history = JSON.parse(localStorage.getItem("bidHistory")) || [];
@@ -95,7 +104,7 @@ function submitSingleDigit(){
  localStorage.setItem("bidHistory", JSON.stringify(history));
 
  alert("Single Digit Bid Submitted");
- location.href = "my-bids.index.html";
+ location.href = "my bids.index.html";
 }
 </script>
 

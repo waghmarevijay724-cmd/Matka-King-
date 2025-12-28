@@ -1,81 +1,34 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Single Digit Ank</title>
+<title>Single Digit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:#f2f2f2;
-  padding-bottom:80px;
-}
+body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:80px}
 .header{
-  display:flex;
-  align-items:center;
-  padding:14px;
-  background:#fff;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
-}
-.header b{
-  font-size:18px;
+ display:flex;align-items:center;
+ padding:12px;background:#fff;
+ box-shadow:0 2px 5px rgba(0,0,0,.1)
 }
 .wallet{
-  margin-left:auto;
-  background:#111;
-  color:#fff;
-  padding:6px 14px;
-  border-radius:20px;
-  font-weight:bold;
+ margin-left:auto;
+ background:#111;color:#fff;
+ padding:6px 14px;border-radius:20px;
+ font-size:14px
 }
-.status{
-  padding:10px 14px;
-  font-size:14px;
-  color:green;
+.container{padding:15px}
+select,input{
+ width:100%;padding:12px;margin-bottom:10px;
+ border-radius:6px;border:1px solid #ccc;font-size:15px
 }
-.container{
-  padding:10px;
-}
-.row{
-  background:#fff;
-  border-radius:10px;
-  padding:12px;
-  margin-bottom:10px;
-  display:flex;
-  align-items:center;
-}
-.row span{
-  width:30px;
-  font-weight:bold;
-}
-.row input{
-  margin-left:auto;
-  width:90px;
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-.footer{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#fff;
-  box-shadow:0 -2px 5px rgba(0,0,0,.1);
-  padding:12px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.submit{
-  background:#ff9800;
-  color:#fff;
-  border:none;
-  padding:10px 20px;
-  border-radius:25px;
-  font-size:16px;
+button{
+ width:100%;padding:14px;
+ background:#ff9800;color:#fff;
+ border:none;border-radius:30px;
+ font-size:16px
 }
 </style>
 </head>
@@ -83,124 +36,68 @@ body{
 <body>
 
 <div class="header">
-  <b>TIME BAZAR</b>
-  <div class="wallet" id="wallet">₹ 0</div>
+ ← Single Digit
+ <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
-<div class="status">
-  ✅ OPEN Running
-</div>
+<div class="container">
 
-<div class="container" id="numbers"></div>
+<select id="gameType">
+ <option value="OPEN">OPEN</option>
+ <option value="CLOSE">CLOSE</option>
+</select>
 
-<div class="footer">
-  <div>
-    Bids: <span id="bids">0</span><br>
-    Points: <span id="points">0</span>
-  </div>
-  <button class="submit" onclick="submitBet()">Submit</button>
+<input type="number" id="digit" placeholder="Enter Digit (0-9)">
+<input type="number" id="points" placeholder="Enter Points">
+
+<button onclick="submitSingleDigit()">Submit</button>
+
 </div>
 
 <script>
-/* ================= WALLET SETUP ================= */
-let walletBalance = localStorage.getItem("walletBalance");
+// ✅ MASTER WALLET
+let wallet = parseInt(localStorage.getItem("walletBalance") || "0");
+document.getElementById("walletBal").innerText = wallet;
 
-if(walletBalance === null){
-  walletBalance = 1100; // default balance
-  localStorage.setItem("walletBalance", walletBalance);
-}else{
-  walletBalance = parseInt(walletBalance);
+function submitSingleDigit(){
+
+ let digit = document.getElementById("digit").value;
+ let points = parseInt(document.getElementById("points").value);
+ let type = document.getElementById("gameType").value;
+
+ if(digit==="" || points===""){
+  alert("Fill all fields");
+  return;
+ }
+
+ if(points > wallet){
+  alert("Low Wallet Balance");
+  return;
+ }
+
+ wallet -= points;
+
+ // ✅ SAVE BID HISTORY
+ let history = JSON.parse(localStorage.getItem("bidHistory")) || [];
+ let now = new Date();
+
+ history.push({
+  date: now.toLocaleDateString(),
+  time: now.toLocaleTimeString(),
+  game: "Single Digit",
+  session: type,
+  number: digit,
+  points: points,
+  balance: wallet
+ });
+
+ localStorage.setItem("walletBalance", wallet);
+ localStorage.setItem("bidHistory", JSON.stringify(history));
+
+ alert("Single Digit Bid Submitted");
+ location.href = "my-bids.index.html";
 }
+</script>
 
-document.getElementById("wallet").innerText = "₹ " + walletBalance;
-
-/* ================= CREATE DIGITS ================= */
-const numbersDiv = document.getElementById("numbers");
-
-for(let i=0;i<=9;i++){
-  numbersDiv.innerHTML += `
-    <div class="row">
-      <span>${i}</span>
-      <input type="number" min="0" value="0" oninput="calculateTotal()">
-    </div>
-  `;
-}
-
-/* ================= CALCULATE ================= */
-function calculateTotal(){
-  const inputs = document.querySelectorAll(".row input");
-  let totalPoints = 0;
-  let totalBids = 0;
-
-  inputs.forEach(inp=>{
-    const val = parseInt(inp.value) || 0;
-    if(val > 0){
-      totalPoints += val;
-      totalBids++;
-    }
-  });
-
-  document.getElementById("points").innerText = totalPoints;
-  document.getElementById("bids").innerText = totalBids;
-}
-
-/* ================= SUBMIT BET ================= */
-function submitBet(){
-
-  const totalPoints = parseInt(
-    document.getElementById("points").innerText
-  );
-
-  if(totalPoints <= 0){
-    alert("Please enter points");
-    return;
-  }
-
-  // ✅ REAL LOW BALANCE CHECK
-  if(walletBalance < totalPoints){
-    alert("Low balance");
-    return;
-  }
-
-  // minus wallet
-  walletBalance -= totalPoints;
-  localStorage.setItem("walletBalance", walletBalance);
-
-  document.getElementById("wallet").innerText = "₹ " + walletBalance;
-
-  alert("Bet submitted successfully");
-
-  // reset inputs
-  document.querySelectorAll(".row input").forEach(i=>i.value=0);
-  calculateTotal();
-}
-</script><script>
-function saveBid(game, session, number, points){
-  let wallet = parseInt(localStorage.getItem("walletBalance") || 0);
-  if(points > wallet){
-    alert("Low Balance");
-    return;
-  }
-
-  wallet -= points;
-  localStorage.setItem("walletBalance", wallet);
-
-  let bids = JSON.parse(localStorage.getItem("bidHistory")) || [];
-
-  let now = new Date();
-  bids.push({
-    date: now.toLocaleDateString(),
-    time: now.toLocaleTimeString(),
-    game: game,                 // Single Digit / Jodi / Single Pana etc
-    session: session,           // Open / Close
-    number: number,
-    points: points,
-    balance: wallet
-  });
-
-  localStorage.setItem("bidHistory", JSON.stringify(bids));
-  alert("Bid Placed Successfully");
-}
-    </script>
 </body>
 </html>

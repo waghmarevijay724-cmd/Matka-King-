@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,61 +6,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f2f2f2;
-  padding-bottom:60px;
-}
+body{margin:0;font-family:Arial;background:#f2f2f2;padding-bottom:60px}
 .header{
-  background:#fff;
-  padding:12px;
-  font-size:18px;
-  font-weight:bold;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
+  background:#fff;padding:12px;font-size:18px;font-weight:bold;
+  box-shadow:0 2px 5px rgba(0,0,0,.1)
 }
 .wallet{
-  float:right;
-  background:#111;
-  color:#fff;
-  padding:4px 10px;
-  border-radius:4px;
-  font-size:14px;
+  float:right;background:#111;color:#fff;
+  padding:4px 10px;border-radius:4px;font-size:14px
 }
-.table-wrap{
-  padding:10px;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-}
+.table-wrap{padding:10px}
+table{width:100%;border-collapse:collapse;background:#fff}
 th,td{
-  padding:8px;
-  border-bottom:1px solid #ddd;
-  font-size:13px;
-  text-align:center;
+  padding:8px;border-bottom:1px solid #ddd;
+  font-size:13px;text-align:center
 }
-th{
-  background:#222;
-  color:#fff;
-  position:sticky;
-  top:0;
-}
-.no-data{
-  padding:20px;
-  text-align:center;
-  color:#777;
-}
+th{background:#222;color:#fff;position:sticky;top:0}
+.no-data{text-align:center;color:#777;padding:20px}
 .clear-btn{
-  margin:10px;
-  padding:10px;
-  width:calc(100% - 20px);
-  background:red;
-  color:#fff;
-  border:none;
-  border-radius:5px;
-  font-size:16px;
+  margin:10px;padding:10px;width:calc(100% - 20px);
+  background:red;color:#fff;border:none;
+  border-radius:5px;font-size:16px
 }
 </style>
 </head>
@@ -74,19 +39,19 @@ th{
 </div>
 
 <div class="table-wrap">
-<table id="bidTable">
+<table>
 <thead>
 <tr>
   <th>Date</th>
   <th>Time</th>
-  <th>marketName</th>
+  <th>Market</th>
   <th>Open/Close</th>
   <th>Bid</th>
   <th>Points</th>
   <th>Balance</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 </table>
 <div id="noData" class="no-data">No Bids Found</div>
 </div>
@@ -94,32 +59,38 @@ th{
 <button class="clear-btn" onclick="clearHistory()">Clear History</button>
 
 <script>
-let bidHistory = JSON.parse(localStorage.getItem("bidHistory")) || [];
-let wallet = localStorage.getItem("walletBalance") || 0;
+// 🔐 LOGIN CHECK
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="index.html";
 
-document.getElementById("walletBal").innerText = wallet;
+let userKey = "user_"+mobile;
+let user = JSON.parse(localStorage.getItem(userKey)) || {wallet:0,myBids:[]};
+
+document.getElementById("walletBal").innerText = user.wallet || 0;
+
+let tbody = document.getElementById("tbody");
+let noData = document.getElementById("noData");
 
 function loadBids(){
-  const tbody = document.querySelector("#bidTable tbody");
-  tbody.innerHTML = "";
+  tbody.innerHTML="";
 
-  if(bidHistory.length === 0){
-    document.getElementById("noData").style.display="block";
+  if(!user.myBids || user.myBids.length===0){
+    noData.style.display="block";
     return;
   }
 
-  document.getElementById("noData").style.display="none";
+  noData.style.display="none";
 
-  bidHistory.reverse().forEach(bid=>{
-    let tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${bid.date}</td>
-      <td>${bid.time}</td>
-      <td>${bid.marketName}</td>
-      <td>${bid.session}</td>
-      <td>${bid.number}</td>
-      <td>${bid.points}</td>
-      <td>₹${bid.balance}</td>
+  user.myBids.slice().reverse().forEach(b=>{
+    let tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${b.date}</td>
+      <td>${b.time}</td>
+      <td>${b.marketName}</td>
+      <td>${b.openClose}</td>
+      <td>${b.bid}</td>
+      <td>${b.points}</td>
+      <td>₹${b.balance}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -127,8 +98,9 @@ function loadBids(){
 
 function clearHistory(){
   if(confirm("Clear all bid history?")){
-    localStorage.removeItem("bidHistory");
-    location.reload();
+    user.myBids=[];
+    localStorage.setItem(userKey,JSON.stringify(user));
+    loadBids();
   }
 }
 

@@ -138,7 +138,15 @@ th{background:#eee}
 <script>
 let wallet = parseInt(localStorage.getItem("walletBalance") || "0");
 document.getElementById("walletBal").innerText = wallet;
+function getMarketName(){
+  let m1 = document.getElementById("marketName");
+  if(m1) return m1.innerText.trim();
 
+  let m2 = document.getElementById("market");
+  if(m2) return m2.value;
+
+  return "Unknown Market";
+}
 function addBid(){
   let pana = document.getElementById("pana").value.trim();
   let points = parseInt(document.getElementById("points").value);

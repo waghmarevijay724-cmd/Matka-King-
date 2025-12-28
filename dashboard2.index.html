@@ -78,7 +78,7 @@ button:disabled{opacity:.5}
 
 <!-- BOTTOM -->
 <div class="bottom">
- <div onclick="go('my bids.index.html')">My Bids</div>
+ <div onclick="go('my-bids.index.html')">My Bids</div>
  <div onclick="go('passbook.index.html')">Passbook</div>
  <div class="active">Home</div>
  <div onclick="go('funds.index.html')">Funds</div>
@@ -91,10 +91,13 @@ let mobile = localStorage.getItem("loggedUser");
 if(!mobile) location.href="index.html";
 
 let userKey = "user_"+mobile;
-let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User",wallet:0};
+let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User"};
+
+// 👉 MASTER WALLET
+let walletBalance = parseInt(localStorage.getItem("walletBalance") || "0");
 
 username.innerText = "Hello, " + user.name;
-wallet.innerText = user.wallet || 0;
+wallet.innerText = walletBalance;
 
 // 🔗 NAV
 function go(p){location.href=p}
@@ -112,10 +115,10 @@ const markets = [
  {name:"SRIDEVI",open:"01:00",close:"12:35"},
  {name:"TIME BAZAR",open:"01:00",close:"14:00"},
  {name:"MILAN DAY",open:"01:00",close:"16:55"},
- {name:"KALYAN",open:"01:00",close:"1:11"},
+ {name:"KALYAN",open:"01:00",close:"01:11"},
  {name:"SRIDEVI NIGHT",open:"01:00",close:"20:15"},
  {name:"MILAN NIGHT",open:"01:00",close:"23:15"},
- {name:"KALYAN NIGHT",open:"01:00",close:"24:15"}
+ {name:"KALYAN NIGHT",open:"01:00",close:"23:59"}
 ];
 
 // 📊 RESULTS
@@ -149,11 +152,9 @@ function buildUI(){
   let resClass = "pending";
 
   if(r){
-    // OPEN DECLARED ONLY
     if(r.openPana && r.openSingle && !r.closePana){
       resText = `${r.openPana}-${r.openSingle}-***`;
     }
-    // FULL RESULT
     if(r.openPana && r.openSingle && r.closeSingle && r.closePana){
       resText = `${r.openPana}-${r.openSingle}${r.closeSingle}-${r.closePana}`;
       resClass = "complete";
@@ -168,7 +169,7 @@ function buildUI(){
 
     <div class="result-box">
      <div class="result-title">Result</div>
-     <div class="result-value ${resClass}" id="res${i}">
+     <div class="result-value ${resClass}">
        ${resText}
      </div>
     </div>
@@ -187,31 +188,21 @@ function buildUI(){
 
   function update(){
    let s=getStatus(toDate(m.open),toDate(m.close));
-   if(s==="NOTOPEN"){
-    st.innerText="Market Not Open";
-    btn.disabled=true;
-   }
-   if(s==="RUNNING"){
-    st.innerHTML="<span class='blink'>Market Running</span>";
-    btn.disabled=false;
-   }
-   if(s==="CLOSED"){
-    st.innerText="Market Closed";
-    btn.disabled=true;
-   }
+   if(s==="NOTOPEN"){ st.innerText="Market Not Open"; btn.disabled=true; }
+   if(s==="RUNNING"){ st.innerHTML="<span class='blink'>Market Running</span>"; btn.disabled=false; }
+   if(s==="CLOSED"){ st.innerText="Market Closed"; btn.disabled=true; }
   }
   update();
-  setInterval(update,1000);
  });
 }
 
-// 🔄 LIVE REFRESH
+// 🔄 LIVE WALLET SYNC
 buildUI();
 setInterval(()=>{
- user = JSON.parse(localStorage.getItem(userKey)) || user;
- wallet.innerText = user.wallet || 0;
+ walletBalance = parseInt(localStorage.getItem("walletBalance") || "0");
+ wallet.innerText = walletBalance;
  buildUI();
-},5000);
+},2000);
 </script>
 
 </body>

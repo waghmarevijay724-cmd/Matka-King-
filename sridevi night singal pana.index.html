@@ -219,7 +219,15 @@ function submitBids(){
       points: points,
       balance: wallet
     });
-  });
+  });user.myBids.push({
+  date: date,
+  time: time,
+  marketName: marketName,   // ⭐ FIX
+  openClose: session,
+  bid: digit,
+  points: points,
+  balance: user.wallet
+});
 
   localStorage.setItem("walletBalance", wallet);
   localStorage.setItem("bidHistory", JSON.stringify(history));

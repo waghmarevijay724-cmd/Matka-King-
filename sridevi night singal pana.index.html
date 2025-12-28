@@ -1,213 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Single Pana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:Arial;margin:0;background:#f2f2f2}
-.header{display:flex;align-items:center;padding:10px;background:#fff}
-.wallet{margin-left:auto;background:#111;color:#fff;padding:5px 12px;border-radius:20px}
-.box{padding:15px}
-input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc}
-button{background:#f5a000;color:#fff;border:none;border-radius:25px;padding:12px;width:100%}
-table{width:100%;margin-top:15px;border-collapse:collapse;background:#fff}
-th,td{text-align:center;padding:8px;border-bottom:1px solid #eee}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f5f5;
+  padding-bottom:90px;
+}
+.header{
+  display:flex;
+  align-items:center;
+  padding:14px;
+  background:#fff;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
+  font-size:18px;
+  font-weight:bold;
+}
+.wallet{
+  margin-left:auto;
+  background:#111;
+  color:#fff;
+  padding:6px 14px;
+  border-radius:20px;
+  font-size:14px;
+}
+.container{
+  padding:15px;
+}
+select,input{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+.add-btn{
+  width:100%;
+  padding:14px;
+  background:#f6a800;
+  border:none;
+  color:#fff;
+  font-size:16px;
+  border-radius:30px;
+}
+table{
+  width:100%;
+  margin-top:15px;
+  background:#fff;
+  border-collapse:collapse;
+}
+th,td{
+  padding:8px;
+  text-align:center;
+  border-bottom:1px solid #ddd;
+  font-size:14px;
+}
+th{background:#eee}
 .bottom{
- position:fixed;bottom:0;left:0;right:0;background:#fff;
- padding:10px;display:flex;justify-content:space-between;
- border-top:1px solid #ddd;gap:10px;align-items:center
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#fff;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  box-shadow:0 -2px 5px rgba(0,0,0,.1);
 }
-#panaList{
- position:absolute;background:#fff;width:100%;
- border:1px solid #ccc;z-index:99;display:none;
- max-height:200px;overflow:auto
+.info{
+  font-size:14px;
 }
-#panaList div{padding:6px}
-#panaList div:hover{background:#f1f1f1;cursor:pointer}
+.submit-btn{
+  margin-left:auto;
+  padding:12px 30px;
+  background:#f6a800;
+  border:none;
+  color:#fff;
+  font-size:16px;
+  border-radius:30px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
- ← <b id="marketName"></b>
- <div class="wallet">₹ <span id="wallet">0</span></div>
+  ← MILAN DAY
+  <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
-<div class="box">
+<div class="container">
 
-<label>Game Type</label>
-<select id="betType">
- <option value="OPEN">OPEN</option>
- <option value="CLOSE">CLOSE</option>
-</select>
+  <label>Game Type</label>
+  <select id="gameType">
+    <option value="OPEN">OPEN</option>
+    <option value="CLOSE">CLOSE</option>
+  </select>
 
-<label>Single Pana</label>
-<div style="position:relative">
- <input id="panaInput" placeholder="Search Pana" onkeyup="searchPana()">
- <div id="panaList"></div>
-</div>
+  <label>Single Pana</label>
+  <input type="number" id="pana" placeholder="Enter Pana (123)">
 
-<label>Points</label>
-<input id="points" type="number" placeholder="Enter points">
+  <label>Digit</label>
+  <input type="number" id="digit" placeholder="Digit (0-9)">
 
-<button type="button" onclick="addBid()">Add More</button>
+  <label>Points</label>
+  <input type="number" id="points" placeholder="Enter points">
 
-<table>
-<thead>
-<tr>
- <th>Pana</th>
- <th>Digit</th>
- <th>Points</th>
- <th>Type</th>
-</tr>
-</thead>
-<tbody id="list"></tbody>
-</table>
+  <button class="add-btn" onclick="addBid()">Add More</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Pana</th>
+        <th>Digit</th>
+        <th>Points</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody id="bidBody"></tbody>
+  </table>
 
 </div>
 
 <div class="bottom">
- <div>Bids: <b id="bcount">0</b></div>
- <div>Points: <b id="tpoints">0</b></div>
- <button type="button" onclick="submitBids()">Submit</button>
+  <div class="info">
+    Bids: <span id="bidCount">0</span><br>
+    Points: <span id="totalPoints">0</span>
+  </div>
+  <button class="submit-btn" onclick="submitBids()">Submit</button>
 </div>
 
 <script>
-// 🔐 LOGIN CHECK
-let mobile = localStorage.getItem("loggedUser");
-if(!mobile){
- alert("Please login");
- location.href="index.html";
-}
+let wallet = parseInt(localStorage.getItem("walletBalance") || "1100");
+document.getElementById("walletBal").innerText = wallet;
 
-// 👤 USER DATA
-let user = JSON.parse(localStorage.getItem("user_"+mobile));
-if(!user){
- user={wallet:0,myBids:[],passbook:[]};
- localStorage.setItem("user_"+mobile,JSON.stringify(user));
-}
-
-wallet.innerText=user.wallet;
-
-// 📌 MARKET
-let market = localStorage.getItem("selectedMarket") || "MARKET";
-marketName.innerText=market;
-
-// 📦 TEMP
-let bids=[];
-let total=0;
-
-// 🔢 SINGLE DIGIT LOGIC
-function singleDigit(p){
- return (p.split('').reduce((a,b)=>a+Number(b),0))%10;
-}
-
-// ➕ ADD BID
 function addBid(){
- let pana=panaInput.value.trim();
- let pts=Number(points.value);
- let session=betType.value;
+  let pana = document.getElementById("pana").value;
+  let digit = document.getElementById("digit").value;
+  let points = document.getElementById("points").value;
+  let type = document.getElementById("gameType").value;
 
- if(pana.length!==3) return alert("Select valid pana");
- if(pts<=0) return alert("Enter valid points");
- if(user.wallet < total+pts) return alert("Low balance");
+  if(pana==="" || digit==="" || points===""){
+    alert("Fill all fields");
+    return;
+  }
 
- bids.push({
-  panaNo:pana,
-  number:singleDigit(pana),
-  amount:pts,
-  session:session
- });
+  let tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${pana}</td>
+    <td>${digit}</td>
+    <td>${points}</td>
+    <td>${type}</td>
+  `;
+  document.getElementById("bidBody").appendChild(tr);
 
- total+=pts;
- render();
+  document.getElementById("pana").value="";
+  document.getElementById("digit").value="";
+  document.getElementById("points").value="";
 
- panaInput.value="";
- points.value="";
- panaList.style.display="none";
+  updateSummary();
 }
 
-// 🔄 RENDER TABLE
-function render(){
- list.innerHTML=bids.map(b=>`
- <tr>
-  <td>${b.panaNo}</td>
-  <td>${b.number}</td>
-  <td>${b.amount}</td>
-  <td>${b.session}</td>
- </tr>
- `).join("");
-
- bcount.innerText=bids.length;
- tpoints.innerText=total;
-}
-
-// ✅ SUBMIT BIDS
-function submitBids(){
- if(bids.length===0) return alert("No bids added");
-
- user.wallet -= total;
-
- bids.forEach(b=>{
-  user.myBids.push({
-   market:market,
-   game:"Single Pana",
-   session:b.session,
-   panaType:"Single Pana",
-   panaNo:b.panaNo,
-   number:b.number,
-   amount:b.amount,
-   status:"PENDING",
-   winAmount:0,
-   time:new Date().toLocaleString()
+function updateSummary(){
+  let rows = document.querySelectorAll("#bidBody tr");
+  let total = 0;
+  rows.forEach(r=>{
+    total += parseInt(r.cells[2].innerText);
   });
- });
-
- user.passbook.push({
-  type:"DEBIT",
-  market:market,
-  session:bids[0].session,
-  game:"Single Pana",
-  amount:total,
-  time:new Date().toLocaleString()
- });
-
- localStorage.setItem("user_"+mobile,JSON.stringify(user));
-
- alert("Single Pana Bid Submitted Successfully");
- location.reload();
+  document.getElementById("bidCount").innerText = rows.length;
+  document.getElementById("totalPoints").innerText = total;
 }
-</script>
 
-<script>
-// 🔍 SINGLE PANA LIST
-const singlePanaList=[
-"120","123","124","125","126","127","128","129","130",
-"134","135","136","137","138","139","140",
-"145","146","147","148","149","150",
-"156","157","158","159","160",
-"167","168","169","170",
-"178","179","180","189","190"
-];
+function submitBids(){
+  let rows = document.querySelectorAll("#bidBody tr");
+  if(rows.length===0){
+    alert("No bids added");
+    return;
+  }
 
-function searchPana(){
- panaList.innerHTML="";
- let v=panaInput.value.trim();
- if(!v){panaList.style.display="none";return;}
+  let total = parseInt(document.getElementById("totalPoints").innerText);
+  if(total > wallet){
+    alert("Low Wallet Balance");
+    return;
+  }
 
- singlePanaList.filter(p=>p.startsWith(v)).forEach(p=>{
-  let d=document.createElement("div");
-  d.innerText=p;
-  d.onclick=()=>{
-   panaInput.value=p;
-   panaList.style.display="none";
-  };
-  panaList.appendChild(d);
- });
- panaList.style.display="block";
+  let history = JSON.parse(localStorage.getItem("bidHistory")) || [];
+  let now = new Date();
+
+  rows.forEach(r=>{
+    let pana = r.cells[0].innerText;
+    let digit = r.cells[1].innerText;
+    let points = parseInt(r.cells[2].innerText);
+    let type = r.cells[3].innerText;
+
+    wallet -= points;
+
+    history.push({
+      date: now.toLocaleDateString(),
+      time: now.toLocaleTimeString(),
+      game: "Single Pana",
+      session: type,
+      number: pana + " (" + digit + ")",
+      points: points,
+      balance: wallet
+    });
+  });
+
+  localStorage.setItem("walletBalance", wallet);
+  localStorage.setItem("bidHistory", JSON.stringify(history));
+
+  alert("Bids Submitted Successfully");
+  window.location.href = "my-bids.index.html";
 }
 </script>
 

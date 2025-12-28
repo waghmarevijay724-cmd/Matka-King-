@@ -175,24 +175,32 @@ function submitBet(){
   calculateTotal();
 }
 </script><script>
-function saveBidHistory(digit, points, session){
-  let bids = JSON.parse(localStorage.getItem("myBids")) || [];
+function saveBid(game, session, number, points){
+  let wallet = parseInt(localStorage.getItem("walletBalance") || 0);
+  if(points > wallet){
+    alert("Low Balance");
+    return;
+  }
+
+  wallet -= points;
+  localStorage.setItem("walletBalance", wallet);
+
+  let bids = JSON.parse(localStorage.getItem("bidHistory")) || [];
 
   let now = new Date();
-
   bids.push({
     date: now.toLocaleDateString(),
     time: now.toLocaleTimeString(),
-    session: session,          // Open / Close
-    game: "Single Digit",
-    digit: digit,
+    game: game,                 // Single Digit / Jodi / Single Pana etc
+    session: session,           // Open / Close
+    number: number,
     points: points,
-    wallet: walletBalance
+    balance: wallet
   });
 
-  localStorage.setItem("myBids", JSON.stringify(bids));
+  localStorage.setItem("bidHistory", JSON.stringify(bids));
+  alert("Bid Placed Successfully");
 }
-</script>
-
+    </script>
 </body>
 </html>

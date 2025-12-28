@@ -6,123 +6,79 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f5f5f5;
-  padding-bottom:90px;
-}
+body{margin:0;font-family:Arial;background:#f5f5f5;padding-bottom:90px}
 .header{
-  display:flex;
-  align-items:center;
-  padding:14px;
-  background:#fff;
+  display:flex;align-items:center;
+  padding:14px;background:#fff;
   box-shadow:0 2px 5px rgba(0,0,0,.1);
-  font-size:18px;
-  font-weight:bold;
+  font-size:18px;font-weight:bold
 }
 .wallet{
-  margin-left:auto;
-  background:#111;
-  color:#fff;
-  padding:6px 14px;
-  border-radius:20px;
-  font-size:14px;
+  margin-left:auto;background:#111;color:#fff;
+  padding:6px 14px;border-radius:20px;font-size:14px
 }
-.container{
-  padding:15px;
-}
+.container{padding:15px}
 select,input{
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  font-size:15px;
+  width:100%;padding:12px;margin-bottom:10px;
+  border-radius:6px;border:1px solid #ccc;font-size:15px
 }
 .add-btn{
-  width:100%;
-  padding:14px;
-  background:#f6a800;
-  border:none;
-  color:#fff;
-  font-size:16px;
-  border-radius:30px;
+  width:100%;padding:14px;background:#f6a800;
+  border:none;color:#fff;font-size:16px;border-radius:30px
 }
-table{
-  width:100%;
-  margin-top:15px;
-  background:#fff;
-  border-collapse:collapse;
-}
+table{width:100%;margin-top:15px;background:#fff;border-collapse:collapse}
 th,td{
-  padding:8px;
-  text-align:center;
-  border-bottom:1px solid #ddd;
-  font-size:14px;
+  padding:8px;text-align:center;
+  border-bottom:1px solid #ddd;font-size:14px
 }
 th{background:#eee}
 .bottom{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  background:#fff;
-  padding:10px;
-  display:flex;
-  align-items:center;
-  box-shadow:0 -2px 5px rgba(0,0,0,.1);
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;padding:10px;display:flex;
+  align-items:center;box-shadow:0 -2px 5px rgba(0,0,0,.1)
 }
-.info{
-  font-size:14px;
-}
+.info{font-size:14px}
 .submit-btn{
-  margin-left:auto;
-  padding:12px 30px;
-  background:#f6a800;
-  border:none;
-  color:#fff;
-  font-size:16px;
-  border-radius:30px;
+  margin-left:auto;padding:12px 30px;
+  background:#f6a800;border:none;color:#fff;
+  font-size:16px;border-radius:30px
 }
 </style>
 </head>
 
 <body>
 
-<div class="header" id="marketName"></div>
+<div class="header">
+  <div id="marketName"></div>
   <div class="wallet">₹ <span id="walletBal">0</span></div>
 </div>
 
 <div class="container">
 
-  <label>Game Type</label>
-  <select id="gameType">
-    <option value="OPEN">OPEN</option>
-    <option value="CLOSE">CLOSE</option>
-  </select>
+<label>Game Type</label>
+<select id="gameType">
+  <option value="OPEN">OPEN</option>
+  <option value="CLOSE">CLOSE</option>
+</select>
 
-  <label>Single Pana</label>
-  <input type="number" id="pana" placeholder="Enter Pana (123)">
+<label>Single Pana</label>
+<input type="number" id="pana" placeholder="Enter Pana (123)">
 
-  
+<label>Points</label>
+<input type="number" id="points" placeholder="Enter points">
 
-  <label>Points</label>
-  <input type="number" id="points" placeholder="Enter points">
+<button class="add-btn" onclick="addBid()">Add More</button>
 
-  <button class="add-btn" onclick="addBid()">Add More</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Pana</th>
-        
-        <th>Points</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody id="bidBody"></tbody>
-  </table>
+<table>
+<thead>
+<tr>
+  <th>Pana</th>
+  <th>Points</th>
+  <th>Type</th>
+</tr>
+</thead>
+<tbody id="bidBody"></tbody>
+</table>
 
 </div>
 
@@ -135,28 +91,33 @@ th{background:#eee}
 </div>
 
 <script>
-let wallet = parseInt(localStorage.getItem("walletBalance") || "0");
-document.getElementById("walletBal").innerText = wallet;
-// 📌 Market name
-document.getElementById("marketName").innerText =
-  localStorage.getItem("selectedMarket") || "SRIDEVI NIGHT";
+// 🔐 LOGIN CHECK
+let mobile = localStorage.getItem("loggedUser");
+if(!mobile) location.href="index.html";
+
+let userKey = "user_"+mobile;
+let user = JSON.parse(localStorage.getItem(userKey)) || {wallet:0,myBids:[]};
+
+// ✅ MARKET
+let marketName = localStorage.getItem("selectedMarket") || "UNKNOWN";
+document.getElementById("marketName").innerText = marketName;
+
+// ✅ WALLET
+document.getElementById("walletBal").innerText = user.wallet;
+
+// ➕ ADD ROW
 function addBid(){
   let pana = document.getElementById("pana").value.trim();
   let points = parseInt(document.getElementById("points").value);
   let type = document.getElementById("gameType").value;
-  function getMarketName(){
-  let el = document.getElementById("marketName");
-  return el ? el.innerText.trim() : "Unknown Market";
-    let marketName = localStorage.getItem("selectedMarket") || "UNKNOWN";
-  }
 
   if(pana==="" || isNaN(points)){
     alert("Enter valid pana & points");
     return;
   }
 
-  let tr = document.createElement("tr");
-  tr.innerHTML = `
+  let tr=document.createElement("tr");
+  tr.innerHTML=`
     <td>${pana}</td>
     <td>${points}</td>
     <td>${type}</td>
@@ -170,69 +131,53 @@ function addBid(){
 }
 
 function updateSummary(){
-  let rows = document.querySelectorAll("#bidBody tr");
-  let total = 0;
-
-  rows.forEach(r=>{
-    let p = parseInt(r.cells[1].innerText);
-    if(!isNaN(p)) total += p;
-  });
-
-  document.getElementById("bidCount").innerText = rows.length;
-  document.getElementById("totalPoints").innerText = total;
+  let rows=document.querySelectorAll("#bidBody tr");
+  let total=0;
+  rows.forEach(r=>total+=parseInt(r.cells[1].innerText));
+  document.getElementById("bidCount").innerText=rows.length;
+  document.getElementById("totalPoints").innerText=total;
 }
 
+// ✅ SUBMIT
 function submitBids(){
-  let rows = document.querySelectorAll("#bidBody tr");
-  if(rows.length === 0){
+  let rows=document.querySelectorAll("#bidBody tr");
+  if(rows.length===0){
     alert("No bids added");
     return;
   }
 
-  let total = parseInt(document.getElementById("totalPoints").innerText);
-  if(isNaN(total) || total <= 0){
-    alert("Invalid total points");
-    return;
-  }
-
-  if(total > wallet){
+  let total=parseInt(document.getElementById("totalPoints").innerText);
+  if(total>user.wallet){
     alert("Low Wallet Balance");
     return;
   }
 
-  let history = JSON.parse(localStorage.getItem("bidHistory")) || [];
-  let now = new Date();
+  let now=new Date();
 
   rows.forEach(r=>{
-    let pana = r.cells[0].innerText;
-    let points = parseInt(r.cells[1].innerText);
-    let type = r.cells[2].innerText;
+    let pana=r.cells[0].innerText;
+    let points=parseInt(r.cells[1].innerText);
+    let session=r.cells[2].innerText;
 
-    wallet -= points;
+    user.wallet -= points;
 
-    history.push({
+    user.myBids.push({
       date: now.toLocaleDateString(),
       time: now.toLocaleTimeString(),
-      marketName: "market",
-      session: type,
-      number: pana,
+      marketName: marketName,
+      openClose: session,
+      bid: pana,
       points: points,
-      balance: wallet
+      balance: user.wallet
     });
-  });user.myBids.push({
-  date: date,
-  time: time,
-  marketName: marketName,   // ⭐ FIX
-  openClose: session,
-  bid: digit,
-  points: points,
-  balance: user.wallet
-});
+  });
 
-  localStorage.setItem("walletBalance", wallet);
-  localStorage.setItem("bidHistory", JSON.stringify(history));
+  localStorage.setItem(userKey,JSON.stringify(user));
 
-  alert("Bid Submitted Successfully");
-  window.location.href = "my-bids.index.html";
+  alert("Single Pana Bid Submitted");
+  location.href="my bids.index.html";
 }
-    </script>
+</script>
+
+</body>
+</html>

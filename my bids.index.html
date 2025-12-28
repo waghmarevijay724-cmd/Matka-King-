@@ -79,7 +79,7 @@ th{
 <tr>
   <th>Date</th>
   <th>Time</th>
-  <th>Game</th>
+  <th>marketName</th>
   <th>Open/Close</th>
   <th>Bid</th>
   <th>Points</th>
@@ -115,7 +115,7 @@ function loadBids(){
     tr.innerHTML = `
       <td>${bid.date}</td>
       <td>${bid.time}</td>
-      <td>${bid.game}</td>
+      <td>${bid.marketName}</td>
       <td>${bid.session}</td>
       <td>${bid.number}</td>
       <td>${bid.points}</td>

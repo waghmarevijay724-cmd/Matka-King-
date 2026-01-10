@@ -21,6 +21,23 @@ body{margin:0;font-family:Arial;background:#f6f6f6}
  padding:6px 12px;border-radius:20px
 }
 
+.notice{
+ background:#fff3cd;
+ padding:8px;
+ text-align:center;
+ font-weight:bold;
+ overflow:hidden;
+ white-space:nowrap;
+}
+.notice span{
+ display:inline-block;
+ animation:slide 12s linear infinite;
+}
+@keyframes slide{
+ 0%{transform:translateX(100%)}
+ 100%{transform:translateX(-100%)}
+}
+
 .card{
  background:#fff;margin:10px;padding:12px;
  border-radius:12px;
@@ -69,7 +86,8 @@ button:disabled{opacity:.5}
  <div class="wallet">₹ <span id="wallet">0</span></div>
 </div>
 
-<marquee>🔥 Fast Withdrawal | Min Bet ₹1 | Trusted Panel</marquee>
+<div class="notice"><span>🔥 Fast Withdrawal | Min Bet ₹1 | Trusted Panel</span></div>
+
 <center><h3>Market Bazar</h3></center>
 
 <div id="markets"></div>
@@ -86,18 +104,99 @@ button:disabled{opacity:.5}
 </div>
 
 <script>
-// 🔐 LOGIN
+// 🔐 LOGIN CHECK
 let mobile = localStorage.getItem("loggedUser");
 if(!mobile) location.href="index.html";
 
-let userKey = "user_"+mobile;
+let userKey = "user_" + mobile;
+let walletKey = "wallet_" + mobile;
+
 let user = JSON.parse(localStorage.getItem(userKey)) || {name:"User"};
 
-// 👉 MASTER WALLET
-let walletBalance = parseInt(localStorage.getItem("walletBalance") || "0");
-
 username.innerText = "Hello, " + user.name;
-wallet.innerText = walletBalance;
+
+// ⏱ MARKETS
+const markets = [
+ {name:"SRIDEVI",open:"01:00",close:"12:35"},
+ {name:"TIME BAZAR",open:"01:00",close:"14:00"},
+ {name:"MILAN DAY",open:"01:00",close:"16:55"},
+ {name:"KALYAN",open:"01:00",close:"01:11"},
+ {name:"SRIDEVI NIGHT",open:"01:00",close:"20:15"},
+ {name:"MILAN NIGHT",open:"01:00",close:"23:15"},
+ {name:"KALYAN NIGHT",open:"01:00",close:"23:59"}
+];
+
+// 🕒 TIME HELPERS
+function toDate(t){
+ let d=new Date();
+ let [h,m]=t.split(":");
+ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m,0);
+}
+
+function getStatus(open,close){
+ let now=new Date();
+ if(close < open) close.setDate(close.getDate()+1);
+ if(now < open) return "NOTOPEN";
+ if(now >= open && now <= close) return "RUNNING";
+ return "CLOSED";
+}
+
+// 📊 RESULTS
+function getResults(){
+ return JSON.parse(localStorage.getItem("marketResults")) || {};
+}
+
+// 🧱 BUILD UI (ONE TIME)
+let box=document.getElementById("markets");
+let results=getResults();
+
+markets.forEach((m,i)=>{
+ let r=results[m.name];
+ let text="Result Pending", cls="pending";
+
+ if(r){
+  if(r.openPana && r.openSingle && !r.closePana)
+   text=`${r.openPana}-${r.openSingle}-***`;
+  if(r.openPana && r.openSingle && r.closeSingle && r.closePana){
+   text=`${r.openPana}-${r.openSingle}${r.closeSingle}-${r.closePana}`;
+   cls="complete";
+  }
+ }
+
+ box.innerHTML+=`
+ <div class="card">
+  <div>
+   <h4>${m.name}</h4>
+   <p id="status${i}"></p>
+   <div class="result-box">
+    <div class="result-title">Result</div>
+    <div class="result-value ${cls}">${text}</div>
+   </div>
+   <small>Open: ${m.open} | Close: ${m.close}</small>
+  </div>
+  <div class="play">
+   <button id="btn${i}" onclick="openMarket('${m.name}')">▶</button>
+  </div>
+ </div>
+ `;
+
+ let st=document.getElementById("status"+i);
+ let btn=document.getElementById("btn"+i);
+
+ setInterval(()=>{
+  let s=getStatus(toDate(m.open),toDate(m.close));
+  if(s==="NOTOPEN"){st.innerText="Market Not Open";btn.disabled=true;}
+  if(s==="RUNNING"){st.innerHTML="<span class='blink'>Market Running</span>";btn.disabled=false;}
+  if(s==="CLOSED"){st.innerText="Market Closed";btn.disabled=true;}
+ },1000);
+});
+
+// 💰 LIVE WALLET UPDATE
+setInterval(()=>{
+ let bal=parseInt(localStorage.getItem(walletKey)||"0");
+ if(bal<0){bal=0;localStorage.setItem(walletKey,0);}
+ wallet.innerText=bal;
+},1500);
 
 // 🔗 NAV
 function go(p){location.href=p}
@@ -109,100 +208,6 @@ function openMarket(m){
  localStorage.setItem("selectedMarket",m);
  location.href="sridevi night ank dashboard.index.html";
 }
-
-// ⏱ MARKET DATA
-const markets = [
- {name:"SRIDEVI",open:"01:00",close:"12:35"},
- {name:"TIME BAZAR",open:"01:00",close:"14:00"},
- {name:"MILAN DAY",open:"01:00",close:"16:55"},
- {name:"KALYAN",open:"01:00",close:"01:11"},
- {name:"SRIDEVI NIGHT",open:"01:00",close:"20:15"},
- {name:"MILAN NIGHT",open:"01:00",close:"23:15"},
- {name:"KALYAN NIGHT",open:"01:00",close:"23:59"}
-];
-
-// 📊 RESULTS
-function getResults(){
- return JSON.parse(localStorage.getItem("marketResults")) || {};
-}
-
-// ⏱ TIME HELPERS
-function toDate(t){
- let d=new Date();
- let [h,m]=t.split(":");
- return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,m,0);
-}
-function getStatus(open,close){
- let now=new Date();
- if(now < open) return "NOTOPEN";
- if(now >= open && now <= close) return "RUNNING";
- return "CLOSED";
-}
-
-// 🧱 BUILD UI
-let box=document.getElementById("markets");
-
-function buildUI(){
- box.innerHTML="";
- let results=getResults();
-
- markets.forEach((m,i)=>{
-  let r = results[m.name];
-  let resText = "Result Pending";
-  let resClass = "pending";
-
-  if(r){
-    if(r.openPana && r.openSingle && !r.closePana){
-      resText = `${r.openPana}-${r.openSingle}-***`;
-    }
-    if(r.openPana && r.openSingle && r.closeSingle && r.closePana){
-      resText = `${r.openPana}-${r.openSingle}${r.closeSingle}-${r.closePana}`;
-      resClass = "complete";
-    }
-  }
-
-  box.innerHTML+=`
-  <div class="card">
-   <div>
-    <h4>${m.name}</h4>
-    <p id="status${i}"></p>
-
-    <div class="result-box">
-     <div class="result-title">Result</div>
-     <div class="result-value ${resClass}">
-       ${resText}
-     </div>
-    </div>
-
-    <small>Open: ${m.open} | Close: ${m.close}</small>
-   </div>
-
-   <div class="play">
-    <button id="btn${i}" onclick="openMarket('${m.name}')">▶</button>
-   </div>
-  </div>
-  `;
-
-  let st=document.getElementById("status"+i);
-  let btn=document.getElementById("btn"+i);
-
-  function update(){
-   let s=getStatus(toDate(m.open),toDate(m.close));
-   if(s==="NOTOPEN"){ st.innerText="Market Not Open"; btn.disabled=true; }
-   if(s==="RUNNING"){ st.innerHTML="<span class='blink'>Market Running</span>"; btn.disabled=false; }
-   if(s==="CLOSED"){ st.innerText="Market Closed"; btn.disabled=true; }
-  }
-  update();
- });
-}
-
-// 🔄 LIVE WALLET SYNC
-buildUI();
-setInterval(()=>{
- walletBalance = parseInt(localStorage.getItem("walletBalance") || "0");
- wallet.innerText = walletBalance;
- buildUI();
-},2000);
 </script>
 
 </body>
